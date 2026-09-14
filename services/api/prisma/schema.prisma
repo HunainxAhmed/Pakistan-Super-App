@@ -1,0 +1,336 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  OPERATIONS_MANAGER
+  FINANCE_MANAGER
+  SUPPORT_AGENT
+  RESTAURANT_MANAGER
+  SERVICE_CATEGORY_MANAGER
+  PROVIDER
+  DRIVER
+  DELIVERY_PARTNER
+  MECHANIC
+  TECHNICIAN
+  CUSTOMER
+}
+
+enum UserStatus {
+  ACTIVE
+  PENDING_VERIFICATION
+  SUSPENDED
+  BANNED
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SUSPENDED
+  EXPIRED
+}
+
+enum ServiceCategorySlug {
+  RIDE
+  FOOD
+  MECHANIC
+  HOME_SERVICE
+}
+
+enum PricingModel {
+  DISTANCE_TIME
+  FIXED
+  HOURLY
+  BARGAIN_INDRIVE
+  QUOTE_BASED
+}
+
+enum RequestStatus {
+  REQUESTED
+  MATCHING
+  OFFERS_OPEN
+  ACCEPTED
+  PROVIDER_EN_ROUTE
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  WITHDRAWN
+}
+
+enum PaymentMethod {
+  CASH
+  WALLET
+  JAZZCASH
+  EASYPAISA
+  BANK_CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+model User {
+  id              String         @id @default(uuid())
+  phoneNumber     String         @unique
+  email           String?        @unique
+  fullName        String
+  avatarUrl       String?
+  status          UserStatus     @default(ACTIVE)
+  roles           UserRole[]
+  addresses       SavedAddress[]
+  providerProfile ProviderProfile?
+  wallet          Wallet?
+  requests        ServiceRequest[] @relation("CustomerRequests")
+  assignedJobs    ServiceRequest[] @relation("ProviderJobs")
+  chatMessages    ChatMessage[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([phoneNumber])
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  role      Role
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, role])
+}
+
+model SavedAddress {
+  id           String   @id @default(uuid())
+  userId       String
+  label        String   // HOME, WORK, OTHER
+  customName   String?
+  addressText  String
+  latitude     Float
+  longitude    Float
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model ProviderProfile {
+  id                 String             @id @default(uuid())
+  userId             String             @unique
+  nationalIdNumber   String             // Pakistani CNIC
+  verificationStatus VerificationStatus @default(PENDING)
+  serviceCategories  String[]           // e.g. ["RIDE", "MECHANIC"]
+  isOnline           Boolean            @default(false)
+  ratingAverage      Float              @default(5.0)
+  totalRatings       Int                @default(0)
+  totalCompletedJobs Int                @default(0)
+  currentLatitude    Float?
+  currentLongitude   Float?
+  currentBearing     Float?
+  lastActiveAt       DateTime?
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicles           ProviderVehicle[]
+  offers             ServiceOffer[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([isOnline, verificationStatus])
+}
+
+model ProviderVehicle {
+  id                 String          @id @default(uuid())
+  providerId         String
+  type               String          // BIKE, RICKSHAW, CAR, TOW_TRUCK
+  make               String          // Honda, Suzuki, Toyota
+  model              String          // CD70, Alto, Corolla
+  year               Int
+  registrationNumber String          // KHI-1234
+  color              String
+  hasAirConditioning Boolean         @default(false)
+  provider           ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([providerId])
+}
+
+model ServiceCategory {
+  id          String              @id @default(uuid())
+  slug        ServiceCategorySlug @unique
+  name        String
+  description String?
+  icon        String?
+  isActive    Boolean             @default(true)
+  types       ServiceType[]
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+}
+
+model ServiceType {
+  id                   String          @id @default(uuid())
+  categoryId           String
+  slug                 String          @unique // e.g. "bike", "ac_car", "mechanic_battery"
+  name                 String
+  icon                 String?
+  pricingModel         PricingModel    @default(DISTANCE_TIME)
+  baseFare             Float           @default(100.0) // PKR
+  perKmRate            Float           @default(30.0)
+  perMinuteRate        Float           @default(5.0)
+  minFare              Float           @default(150.0)
+  commissionPercentage Float           @default(15.0)
+  isActive             Boolean         @default(true)
+  category             ServiceCategory @relation(fields: [categoryId], references: [id])
+  requests             ServiceRequest[]
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  @@index([categoryId, isActive])
+}
+
+model ServiceRequest {
+  id                      String          @id @default(uuid())
+  requestNumber           String          @unique
+  serviceTypeId           String
+  customerId              String
+  assignedProviderId      String?
+  status                  RequestStatus   @default(REQUESTED)
+  
+  pickupLatitude          Float
+  pickupLongitude         Float
+  pickupAddressText       String
+  
+  dropoffLatitude         Float?
+  dropoffLongitude        Float?
+  dropoffAddressText      String?
+  
+  estimatedDistanceKm     Float?
+  estimatedDurationMinutes Float?
+  
+  customerOfferedFare     Float?
+  suggestedFare           Float?
+  finalAgreedFare         Float?
+  surgeMultiplier         Float           @default(1.0)
+  
+  paymentMethod           PaymentMethod   @default(CASH)
+  paymentStatus           PaymentStatus   @default(PENDING)
+  
+  cancellationReason      String?
+  cancelledBy             String?
+  
+  metadata                Json?
+  
+  serviceType             ServiceType     @relation(fields: [serviceTypeId], references: [id])
+  customer                User            @relation("CustomerRequests", fields: [customerId], references: [id])
+  assignedProvider        User?           @relation("ProviderJobs", fields: [assignedProviderId], references: [id])
+  offers                  ServiceOffer[]
+  chatMessages            ChatMessage[]
+  
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  acceptedAt              DateTime?
+  completedAt             DateTime?
+
+  @@index([customerId, status])
+  @@index([assignedProviderId, status])
+  @@index([status])
+}
+
+model ServiceOffer {
+  id               String         @id @default(uuid())
+  serviceRequestId String
+  providerId       String
+  offeredFare      Float          // in PKR
+  etaMinutes       Int
+  distanceKm       Float
+  status           OfferStatus    @default(PENDING)
+  expiresAt        DateTime
+  
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  provider         ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([serviceRequestId, status])
+}
+
+model Wallet {
+  id            String              @id @default(uuid())
+  userId        String              @unique
+  balance       Float               @default(0.0) // PKR
+  lockedBalance Float               @default(0.0)
+  currency      String              @default("PKR")
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions  WalletTransaction[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model WalletTransaction {
+  id            String          @id @default(uuid())
+  walletId      String
+  amount        Float
+  type          TransactionType
+  referenceType String          // e.g. RIDE_PAYMENT, COMMISSION_DEDUCTION
+  referenceId   String
+  balanceBefore Float
+  balanceAfter  Float
+  description   String
+  wallet        Wallet          @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  createdAt     DateTime        @default(now())
+
+  @@index([walletId, createdAt])
+}
+
+model ChatMessage {
+  id               String         @id @default(uuid())
+  serviceRequestId String
+  senderId         String
+  senderRole       String         // CUSTOMER, PROVIDER, SUPPORT
+  messageText      String
+  serviceRequest   ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+  sender           User           @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@index([serviceRequestId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  actorEmail String
+  action     String   // e.g. "SURGE_RULE_UPDATED", "PROVIDER_KYC_APPROVED"
+  resource   String
+  resourceId String?
+  details    Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId, createdAt])
+}
