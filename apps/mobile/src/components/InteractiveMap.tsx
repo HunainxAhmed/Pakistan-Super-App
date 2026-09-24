@@ -272,10 +272,68 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       z-index: 2;
       transition: transform 0.4s ease-out;
     }
+    /* Route Status Legend Pill */
+    .route-legend-pill {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 16px;
+      padding: 5px 11px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      pointer-events: none;
+    }
+    .legend-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .legend-bar-covered {
+      width: 14px;
+      height: 4px;
+      border-radius: 2px;
+      background-color: #94A3B8;
+      box-shadow: 0 0 0 1px #334155;
+    }
+    .legend-bar-remaining {
+      width: 14px;
+      height: 4px;
+      border-radius: 2px;
+      background-color: #2563EB;
+      box-shadow: 0 0 0 1px #1E3A8A;
+    }
+    .legend-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #F8FAFC;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
+  ${
+    isTracking
+      ? `
+  <div class="route-legend-pill">
+    <div class="legend-chip">
+      <div class="legend-bar-covered"></div>
+      <span class="legend-label">Covered</span>
+    </div>
+    <div style="width: 1px; height: 10px; background: rgba(255,255,255,0.25);"></div>
+    <div class="legend-chip">
+      <div class="legend-bar-remaining"></div>
+      <span class="legend-label">Remaining</span>
+    </div>
+  </div>
+  `
+      : ''
+  }
   <script>
     // Authentic top-down vehicle SVG
     var CAR_SVG = '<svg width="22" height="36" viewBox="0 0 24 40" fill="none" xmlns="http://www.w3.org/2000/svg">' +
@@ -366,22 +424,66 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       }).addTo(map);
     }
 
-    // Main Trip Polyline: Pickup -> Dropoff
-    var routeBorder = L.polyline([], {
-      color: '#1E3A8A',
+    // Covered / Completed Route Polylines (Area already traversed by driver)
+    var coveredRouteBorder = L.polyline([], {
+      color: '#334155', // Slate 700 outer casing
       weight: 8,
-      opacity: 0.75,
+      opacity: 0.85,
       lineCap: 'round',
       lineJoin: 'round'
     }).addTo(map);
 
-    var routeLine = L.polyline([], {
-      color: '#2563EB',
+    var coveredRouteLine = L.polyline([], {
+      color: '#94A3B8', // Slate 400 clean muted grey (shows covered area)
       weight: 5,
       opacity: 0.95,
       lineCap: 'round',
       lineJoin: 'round'
     }).addTo(map);
+
+    // Remaining Route Polylines (Route remaining ahead: Driver Position -> Dropoff)
+    var routeBorder = L.polyline([], {
+      color: '#1E3A8A', // Deep navy outer casing
+      weight: 8,
+      opacity: 0.85,
+      lineCap: 'round',
+      lineJoin: 'round'
+    }).addTo(map);
+
+    var routeLine = L.polyline([], {
+      color: '#2563EB', // Vibrant electric navigation blue
+      weight: 5,
+      opacity: 0.95,
+      lineCap: 'round',
+      lineJoin: 'round'
+    }).addTo(map);
+
+    function updateRouteSplit(step) {
+      if (!mainRouteCoordinates || mainRouteCoordinates.length < 2) return;
+
+      if (!isTrackingMode || currentTripPhase !== 'IN_PROGRESS' || step <= 0) {
+        // Full route is remaining / pending (before trip start)
+        coveredRouteBorder.setLatLngs([]);
+        coveredRouteLine.setLatLngs([]);
+        routeBorder.setLatLngs(mainRouteCoordinates);
+        routeLine.setLatLngs(mainRouteCoordinates);
+        return;
+      }
+
+      var total = mainRouteCoordinates.length;
+      var clampedStep = Math.min(step, total - 1);
+
+      // Area already covered by the driver
+      var coveredPts = mainRouteCoordinates.slice(0, clampedStep + 1);
+      // Remaining route left to destination
+      var remainingPts = mainRouteCoordinates.slice(clampedStep);
+
+      coveredRouteBorder.setLatLngs(coveredPts);
+      coveredRouteLine.setLatLngs(coveredPts);
+
+      routeBorder.setLatLngs(remainingPts);
+      routeLine.setLatLngs(remainingPts);
+    }
 
     var routePopup = L.popup({
       closeButton: false,
@@ -413,8 +515,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
               return [c[1], c[0]];
             });
             mainRouteCoordinates = pts;
-            routeBorder.setLatLngs(pts);
-            routeLine.setLatLngs(pts);
+            updateRouteSplit(tripStep);
 
             var distanceKm = (route.distance / 1000).toFixed(1);
             var durationMins = Math.ceil(route.duration / 60);
@@ -460,8 +561,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         [dLat, dLng]
       ];
       mainRouteCoordinates = pts;
-      routeBorder.setLatLngs(pts);
-      routeLine.setLatLngs(pts);
+      updateRouteSplit(tripStep);
 
       if (!isTrackingMode && pts.length > 2) {
         var midIdx = Math.floor(pts.length / 2);
@@ -599,6 +699,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         tripStep = 0;
         var total = pts.length;
         liveDriverMarker.setLatLng(pts[0]);
+        updateRouteSplit(0);
 
         if (mainTripTimer) clearInterval(mainTripTimer);
 
@@ -617,6 +718,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             var prev = pts[tripStep - 1];
 
             liveDriverMarker.setLatLng(cur);
+            updateRouteSplit(tripStep);
 
             var angle = calcBearing(prev[0], prev[1], cur[0], cur[1]);
             var el = liveDriverMarker.getElement();
@@ -639,6 +741,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             }, '*');
           } else {
             clearInterval(mainTripTimer);
+            tripStep = total - 1;
+            updateRouteSplit(tripStep);
             liveDriverMarker.setLatLng([${dropoffLat}, ${dropoffLng}]);
             if (destinationGeofence) {
               destinationGeofence.setStyle({ color: '#10B981', fillColor: '#34D399', fillOpacity: 0.3 });
@@ -661,6 +765,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             tripStep = nearIdx;
             var pt = mainRouteCoordinates[nearIdx];
             liveDriverMarker.setLatLng(pt);
+            updateRouteSplit(tripStep);
             if (destinationGeofence) {
               destinationGeofence.setStyle({ color: '#10B981', fillColor: '#34D399', fillOpacity: 0.3 });
             }
@@ -681,6 +786,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         // Will be triggered when main route loads
       } else if (currentTripPhase === 'COMPLETED') {
         liveDriverMarker.setLatLng([${dropoffLat}, ${dropoffLng}]);
+        tripStep = 999999;
+        updateRouteSplit(tripStep);
       }
     `
         : `

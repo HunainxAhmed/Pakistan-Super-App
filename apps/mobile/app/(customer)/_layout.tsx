@@ -1,10 +1,24 @@
 import React from 'react';
-import { Tabs } from 'expo-router';
-import { Platform } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
+import { Platform, View } from 'react-native';
 import { Colors } from '../../src/theme/colors';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useAppStore } from '../../src/store/useAppStore';
+import { ServiceRequestStatus } from '@superapp/types';
 
 export default function CustomerTabsLayout() {
+  const router = useRouter();
+  const { activeRide } = useAppStore();
+
+  const isOngoingRide =
+    !!activeRide &&
+    [
+      ServiceRequestStatus.ACCEPTED,
+      ServiceRequestStatus.PROVIDER_EN_ROUTE,
+      ServiceRequestStatus.ARRIVED,
+      ServiceRequestStatus.IN_PROGRESS,
+    ].includes(activeRide.status);
+
   return (
     <Tabs
       screenOptions={{
@@ -55,10 +69,44 @@ export default function CustomerTabsLayout() {
       <Tabs.Screen
         name="ride-booking"
         options={{
-          title: 'Rides',
+          title: isOngoingRide ? 'Active Ride' : 'Rides',
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="car" size={23} color={color} />
+            <View style={{ position: 'relative' }}>
+              <MaterialCommunityIcons name="car" size={23} color={isOngoingRide ? '#059669' : color} />
+              {isOngoingRide && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -2,
+                    right: -4,
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: '#10B981',
+                    borderWidth: 1.5,
+                    borderColor: '#FFFFFF',
+                  }}
+                />
+              )}
+            </View>
           ),
+        }}
+        listeners={{
+          tabPress: (e) => {
+            const { activeRide: currentActiveRide } = useAppStore.getState();
+            const isOngoing =
+              !!currentActiveRide &&
+              [
+                ServiceRequestStatus.ACCEPTED,
+                ServiceRequestStatus.PROVIDER_EN_ROUTE,
+                ServiceRequestStatus.ARRIVED,
+                ServiceRequestStatus.IN_PROGRESS,
+              ].includes(currentActiveRide.status);
+            if (isOngoing) {
+              e.preventDefault();
+              router.push('/(customer)/ride-tracking');
+            }
+          },
         }}
       />
       <Tabs.Screen

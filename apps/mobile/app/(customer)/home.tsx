@@ -13,12 +13,40 @@ import { Spacing, BorderRadius, Shadows } from '../../src/theme/spacing';
 import { useAppStore } from '../../src/store/useAppStore';
 import { LocationSearchModal } from '../../src/components/LocationSearchModal';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { ServiceRequestStatus } from '@superapp/types';
 
 export default function CustomerHomeScreen() {
   const router = useRouter();
-  const { currentUser, walletBalance, pickupLocation, setPickup, setDropoff, toggleRoleMode } = useAppStore();
+  const {
+    currentUser,
+    walletBalance,
+    pickupLocation,
+    setPickup,
+    setDropoff,
+    toggleRoleMode,
+    activeRide,
+    driverProfiles,
+  } = useAppStore();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'PICKUP' | 'DROPOFF'>('PICKUP');
+
+  const isOngoingRide =
+    !!activeRide &&
+    [
+      ServiceRequestStatus.ACCEPTED,
+      ServiceRequestStatus.PROVIDER_EN_ROUTE,
+      ServiceRequestStatus.ARRIVED,
+      ServiceRequestStatus.IN_PROGRESS,
+    ].includes(activeRide.status);
+
+  const activeDriverId = activeRide?.assignedProviderId || 'prov-driver-001';
+  const activeDriver = driverProfiles[activeDriverId] || driverProfiles['prov-driver-001'];
+  const driverName = activeDriver?.name || activeRide?.assignedProviderName || 'Tariq Mehmood';
+  const driverVehicle = activeDriver?.vehicle
+    ? `${activeDriver.vehicle.model} (${activeDriver.vehicle.color})`
+    : 'Toyota Corolla GLI (White)';
+  const driverPlate = activeDriver?.vehicle?.plate || 'KHI-9821';
+  const tripFare = activeRide?.finalAgreedFare || activeRide?.customerOfferedFare || 450;
 
   const services = [
     {
@@ -124,6 +152,58 @@ export default function CustomerHomeScreen() {
           <Text style={styles.searchPlaceholder}>Where to or what do you need in Karachi?</Text>
         </TouchableOpacity>
 
+        {/* ONGOING LIVE TRIP CARD */}
+        {isOngoingRide && (
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/(customer)/ride-tracking')}
+            style={styles.activeTripCard}
+          >
+            <View style={styles.activeTripHeader}>
+              <View style={styles.activeTripPulseRow}>
+                <View
+                  style={[
+                    styles.livePulseDot,
+                    activeRide?.status === ServiceRequestStatus.ARRIVED && { backgroundColor: '#F59E0B' },
+                  ]}
+                />
+                <Text
+                  style={[
+                    styles.activeTripBadgeText,
+                    activeRide?.status === ServiceRequestStatus.ARRIVED && { color: '#FBBF24' },
+                  ]}
+                >
+                  {activeRide?.status === ServiceRequestStatus.ARRIVED
+                    ? 'DRIVER ARRIVED • FREE WAITING'
+                    : activeRide?.status === ServiceRequestStatus.IN_PROGRESS
+                    ? 'TRIP IN PROGRESS • EN ROUTE'
+                    : 'DRIVER EN ROUTE • ON THE WAY'}
+                </Text>
+              </View>
+              <Text style={styles.activeTripFare}>Rs. {tripFare}</Text>
+            </View>
+
+            <View style={styles.activeTripBody}>
+              <View style={styles.activeTripIconWrap}>
+                <MaterialCommunityIcons name="car" size={24} color="#FFFFFF" />
+              </View>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.activeTripDriverName}>{driverName}</Text>
+                <Text style={styles.activeTripSub}>
+                  {driverVehicle} • {driverPlate}
+                </Text>
+                <Text numberOfLines={1} style={styles.activeTripRoute}>
+                  To: {activeRide?.dropoffAddressText?.split(',')[0] || 'Destination'}
+                </Text>
+              </View>
+              <View style={styles.activeTripActionBtn}>
+                <Text style={styles.activeTripActionBtnText}>Live Map</Text>
+                <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Primary Service Grid (Commercial 2x2 Grid) */}
         <Text style={styles.sectionTitle}>Services</Text>
         <View style={styles.servicesGrid}>
@@ -131,7 +211,11 @@ export default function CustomerHomeScreen() {
             <TouchableOpacity
               key={svc.id}
               activeOpacity={0.85}
-              onPress={() => router.push(svc.route as any)}
+              onPress={() =>
+                svc.id === 'ride' && isOngoingRide
+                  ? router.push('/(customer)/ride-tracking')
+                  : router.push(svc.route as any)
+              }
               style={styles.serviceCard}
             >
               <View style={[styles.serviceIconWrap, { backgroundColor: svc.bgColor }]}>
@@ -453,5 +537,87 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
     marginTop: 2,
+  },
+  activeTripCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.md,
+    borderWidth: 1.5,
+    borderColor: '#059669',
+    ...Shadows.md,
+  },
+  activeTripHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+    paddingBottom: Spacing.xs,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
+  },
+  activeTripPulseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  livePulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+  },
+  activeTripBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#34D399',
+    letterSpacing: 0.5,
+  },
+  activeTripFare: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FBBF24',
+  },
+  activeTripBody: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  activeTripIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeTripDriverName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  activeTripSub: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 1,
+  },
+  activeTripRoute: {
+    fontSize: 11,
+    color: '#CBD5E1',
+    marginTop: 2,
+  },
+  activeTripActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#059669',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: BorderRadius.round,
+    gap: 4,
+  },
+  activeTripActionBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

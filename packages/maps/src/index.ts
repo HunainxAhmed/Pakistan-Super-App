@@ -22,13 +22,14 @@ export interface IMapService {
 export class MockMapService implements IMapService {
   async searchPlaces(query: string): Promise<LocationLandmark[]> {
     const q = query.toLowerCase().trim();
-    if (!q) return PAKISTANI_LANDMARKS.slice(0, 5);
-    return PAKISTANI_LANDMARKS.filter(
-      (l) =>
-        l.name.toLowerCase().includes(q) ||
-        l.address.toLowerCase().includes(q) ||
-        l.city.toLowerCase().includes(q)
-    );
+    if (!q) return PAKISTANI_LANDMARKS.slice(0, 10);
+    const tokens = q.split(/[\s,.-]+/).filter((t) => t.length > 0);
+    if (tokens.length === 0) return PAKISTANI_LANDMARKS.slice(0, 10);
+
+    return PAKISTANI_LANDMARKS.filter((l) => {
+      const full = `${l.name} ${l.address} ${l.city} ${l.category}`.toLowerCase();
+      return tokens.every((token) => full.includes(token));
+    });
   }
 
   async reverseGeocode(coord: GeoCoordinates): Promise<string> {

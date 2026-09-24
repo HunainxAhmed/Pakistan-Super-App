@@ -36,7 +36,16 @@ export default function RideTrackingScreen() {
     updateWaitingPenalty,
     driverProfiles,
     submitDriverReview,
+    waitingPenaltyAmount: storeWaitingPenalty,
+    waitingOvertimeSeconds: storeOvertimeSeconds,
   } = useAppStore();
+
+  // Safely redirect to home if there is no active ride
+  useEffect(() => {
+    if (!activeRide) {
+      router.replace('/(customer)/home');
+    }
+  }, [activeRide]);
 
   // Initialize trip state directly from store status
   const [tripState, setTripState] = useState<'EN_ROUTE' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED'>(() => {
@@ -46,27 +55,31 @@ export default function RideTrackingScreen() {
     return 'EN_ROUTE';
   });
 
-  const [graceSecondsRemaining, setGraceSecondsRemaining] = useState<number>(FREE_WAITING_SECONDS);
-  const [overtimeSeconds, setOvertimeSeconds] = useState<number>(0);
+  const [graceSecondsRemaining, setGraceSecondsRemaining] = useState<number>(() => {
+    if (storeOvertimeSeconds && storeOvertimeSeconds > 0) return 0;
+    return FREE_WAITING_SECONDS;
+  });
+  const [overtimeSeconds, setOvertimeSeconds] = useState<number>(() => storeOvertimeSeconds || 0);
   const [showReceiptModal, setShowReceiptModal] = useState<boolean>(false);
   const [showRateModal, setShowRateModal] = useState<boolean>(false);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
   const [distanceToDestinationKm, setDistanceToDestinationKm] = useState<number>(8.5);
   const [isNearDestination, setIsNearDestination] = useState<boolean>(false);
 
-  // CRITICAL: Whenever a newly accepted ride mounts, always start in EN_ROUTE!
+  // Sync tripState with activeRide status
   useEffect(() => {
-    if (!activeRide || activeRide.status === ServiceRequestStatus.ACCEPTED) {
+    if (!activeRide) return;
+    if (
+      activeRide.status === ServiceRequestStatus.ACCEPTED ||
+      activeRide.status === ServiceRequestStatus.PROVIDER_EN_ROUTE
+    ) {
       setTripState('EN_ROUTE');
-      setGraceSecondsRemaining(FREE_WAITING_SECONDS);
-      setOvertimeSeconds(0);
-      setShowReceiptModal(false);
-      setIsNearDestination(false);
-      setDistanceToDestinationKm(8.5);
     } else if (activeRide.status === ServiceRequestStatus.ARRIVED) {
       setTripState('ARRIVED');
     } else if (activeRide.status === ServiceRequestStatus.IN_PROGRESS) {
       setTripState('IN_PROGRESS');
+    } else if (activeRide.status === ServiceRequestStatus.COMPLETED) {
+      setTripState('COMPLETED');
     }
   }, [activeRide?.id, activeRide?.status]);
 
@@ -373,18 +386,33 @@ export default function RideTrackingScreen() {
           {/* D. IN_PROGRESS PHASE */}
           {tripState === 'IN_PROGRESS' && (
             <View style={styles.statusBoxBlue}>
-              <Ionicons name="car-sport" size={20} color="#2563EB" />
-              <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={styles.statusBoxTitleBlue}>
-                  {isNearDestination
-                    ? 'Arriving at Destination (< 500m away)'
-                    : `Trip In Progress • ~${distanceToDestinationKm.toFixed(1)} km to dropoff`}
-                </Text>
-                <Text style={styles.statusBoxSubtitleBlue}>
-                  {waitingPenaltyAmount > 0
-                    ? `Overtime waiting fee of Rs. ${waitingPenaltyAmount} locked into final fare.`
-                    : 'Boarded within grace period. No waiting fee applied.'}
-                </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="car-sport" size={20} color="#2563EB" />
+                <View style={{ flex: 1, marginLeft: 8 }}>
+                  <Text style={styles.statusBoxTitleBlue}>
+                    {isNearDestination
+                      ? 'Arriving at Destination (< 500m away)'
+                      : `Trip In Progress • ~${distanceToDestinationKm.toFixed(1)} km to dropoff`}
+                  </Text>
+                  <Text style={styles.statusBoxSubtitleBlue}>
+                    {waitingPenaltyAmount > 0
+                      ? `Overtime waiting fee of Rs. ${waitingPenaltyAmount} locked into final fare.`
+                      : 'Boarded within grace period. No waiting fee applied.'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Visual Route Legend: Covered vs Remaining */}
+              <View style={styles.routeLegendContainer}>
+                <View style={styles.routeLegendItem}>
+                  <View style={styles.legendDotCovered} />
+                  <Text style={styles.routeLegendLabel}>Covered Path (Slate)</Text>
+                </View>
+                <View style={styles.routeLegendDivider} />
+                <View style={styles.routeLegendItem}>
+                  <View style={styles.legendDotRemaining} />
+                  <Text style={styles.routeLegendLabel}>Remaining Route (Blue)</Text>
+                </View>
               </View>
             </View>
           )}
@@ -912,8 +940,6 @@ const styles = StyleSheet.create({
   },
 
   statusBoxBlue: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderColor: '#BFDBFE',
@@ -930,6 +956,47 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#3B82F6',
     marginTop: 2,
+  },
+  routeLegendContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    backgroundColor: '#DBEAFE',
+    borderRadius: BorderRadius.sm,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    marginTop: 8,
+  },
+  routeLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDotCovered: {
+    width: 14,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#94A3B8',
+    borderWidth: 1,
+    borderColor: '#475569',
+  },
+  legendDotRemaining: {
+    width: 14,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#2563EB',
+    borderWidth: 1,
+    borderColor: '#1E3A8A',
+  },
+  routeLegendLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#1E40AF',
+  },
+  routeLegendDivider: {
+    width: 1,
+    height: 12,
+    backgroundColor: '#93C5FD',
   },
 
   /* PIN Verification Card (Customer-facing) */

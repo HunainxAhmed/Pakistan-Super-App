@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '../../src/theme/colors';
 import { Spacing, BorderRadius, Shadows } from '../../src/theme/spacing';
 import { useAppStore } from '../../src/store/useAppStore';
-import { VehicleCategory, VehicleEstimate } from '@superapp/types';
+import { VehicleCategory, VehicleEstimate, ServiceRequestStatus } from '@superapp/types';
 import { calculateHaversineDistanceKm, PAKISTANI_LANDMARKS } from '@superapp/maps';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button } from '../../src/components/Button';
@@ -57,6 +57,22 @@ export default function RideBookingScreen() {
     currentUser,
     driverProfiles,
   } = useAppStore();
+
+  const isOngoingRide =
+    !!activeRide &&
+    [
+      ServiceRequestStatus.ACCEPTED,
+      ServiceRequestStatus.PROVIDER_EN_ROUTE,
+      ServiceRequestStatus.ARRIVED,
+      ServiceRequestStatus.IN_PROGRESS,
+    ].includes(activeRide.status);
+
+  // If a ride is already ongoing (accepted/in-progress), immediately resume live tracking
+  useEffect(() => {
+    if (isOngoingRide) {
+      router.replace('/(customer)/ride-tracking');
+    }
+  }, [isOngoingRide]);
 
   const [isLoadingEstimates, setIsLoadingEstimates] = useState(false);
   const [estimates, setEstimates] = useState<VehicleEstimate[]>([]);
@@ -158,7 +174,8 @@ export default function RideBookingScreen() {
 
     // 1. Driver A (Tariq) pops up at t = 1.8s
     const t1 = setTimeout(() => {
-      if (!useAppStore.getState().activeRide && !isSearchingDrivers) return;
+      const currentRide = useAppStore.getState().activeRide;
+      if (!currentRide || currentRide.status !== ServiceRequestStatus.OFFERS_OPEN) return;
       const bidA: InDriveBid = {
         id: `bid-tariq-${Date.now()}`,
         providerId: 'prov-driver-001',
@@ -181,7 +198,8 @@ export default function RideBookingScreen() {
 
     // 2. Driver B (Asif) pops up ABOVE Tariq at t = 4.8s (3s later)
     const t2 = setTimeout(() => {
-      if (!useAppStore.getState().activeRide && !isSearchingDrivers) return;
+      const currentRide = useAppStore.getState().activeRide;
+      if (!currentRide || currentRide.status !== ServiceRequestStatus.OFFERS_OPEN) return;
       const bidB: InDriveBid = {
         id: `bid-asif-${Date.now()}`,
         providerId: 'prov-driver-002',
@@ -204,7 +222,8 @@ export default function RideBookingScreen() {
 
     // 3. Driver C (Kamran) pops up ABOVE Asif & Tariq at t = 8.8s (4s later)
     const t3 = setTimeout(() => {
-      if (!useAppStore.getState().activeRide && !isSearchingDrivers) return;
+      const currentRide = useAppStore.getState().activeRide;
+      if (!currentRide || currentRide.status !== ServiceRequestStatus.OFFERS_OPEN) return;
       const bidC: InDriveBid = {
         id: `bid-kamran-${Date.now()}`,
         providerId: 'prov-driver-003',
@@ -251,7 +270,9 @@ export default function RideBookingScreen() {
 
   // Independent timer tick for each active bid card (1s tick)
   useEffect(() => {
-    if (!activeRide && !isSearchingDrivers) return;
+    if (!activeRide || activeRide.status !== ServiceRequestStatus.OFFERS_OPEN || !isSearchingDrivers) {
+      return;
+    }
 
     const interval = setInterval(() => {
       setActiveBids((prevBids) => {
@@ -272,7 +293,8 @@ export default function RideBookingScreen() {
 
             // Schedule driver to reconsider and send lower counter-bid after 4.0s
             setTimeout(() => {
-              if (!useAppStore.getState().activeRide) return;
+              const currentRide = useAppStore.getState().activeRide;
+              if (!currentRide || currentRide.status !== ServiceRequestStatus.OFFERS_OPEN) return;
               const loweredFare = Math.max(100, bid.offeredFare - 40);
               const counterBid: InDriveBid = {
                 ...bid,
@@ -353,6 +375,11 @@ export default function RideBookingScreen() {
 
   // Handle user accepting an inDrive offer
   const handleAcceptBid = async (bid: InDriveBid) => {
+    staggeredTimeoutsRef.current.forEach((t) => clearTimeout(t));
+    setIsSearchingDrivers(false);
+    setActiveBids([]);
+    setToastMessage(null);
+
     try {
       if (activeRide) {
         await apiClient.acceptOffer(activeRide.id, bid.id);
@@ -365,7 +392,7 @@ export default function RideBookingScreen() {
       providerName: bid.driverName,
       offeredFare: bid.offeredFare,
     });
-    router.push('/(customer)/ride-tracking');
+    router.replace('/(customer)/ride-tracking');
   };
 
   const handleCancelSearch = () => {
@@ -376,7 +403,36 @@ export default function RideBookingScreen() {
     setToastMessage(null);
   };
 
-  const isBroadcasting = !!activeRide || isSearchingDrivers;
+  const isBroadcasting =
+    !isOngoingRide &&
+    (isSearchingDrivers ||
+      (!!activeRide &&
+        (activeRide.status === ServiceRequestStatus.OFFERS_OPEN ||
+          activeRide.status === ServiceRequestStatus.REQUESTED ||
+          activeRide.status === ServiceRequestStatus.MATCHING)));
+
+  if (isOngoingRide) {
+    return (
+      <SafeAreaView
+        style={[
+          styles.safeArea,
+          {
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: Colors.background,
+          },
+        ]}
+      >
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={{ marginTop: 14, fontSize: 16, fontWeight: '700', color: Colors.textPrimary }}>
+          Resuming your live trip...
+        </Text>
+        <Text style={{ marginTop: 4, fontSize: 13, color: Colors.textSecondary }}>
+          Taking you back to active trip navigation
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
