@@ -348,45 +348,96 @@ export default function ProviderDashboardScreen() {
                     </View>
                   </View>
 
-                  {/* inDrive Bargaining Counter Pills */}
+                  {/* Stacking inDrive Bargaining Section */}
                   <View style={styles.bargainSection}>
-                    <Text style={styles.bargainHeader}>Bargain / Counter-Offer:</Text>
+                    <View style={styles.bargainHeaderRow}>
+                      <Text style={styles.bargainHeader}>Bargain / Counter-Offer (Tap to Stack):</Text>
+                      {delta > 0 && (
+                        <TouchableOpacity
+                          onPress={() => setCounterDeltas((prev) => ({ ...prev, [req.id]: 0 }))}
+                          style={styles.resetDeltaBtn}
+                        >
+                          <Ionicons name="refresh" size={12} color="#DC2626" />
+                          <Text style={styles.resetDeltaText}>Reset to Ask</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    {/* Stacking Quick Pills (+10, +20, +50, +100, -10) */}
                     <View style={styles.counterPillsRow}>
                       <TouchableOpacity
-                        onPress={() => setCounterDeltas((prev) => ({ ...prev, [req.id]: 0 }))}
-                        style={[styles.counterPill, delta === 0 && styles.counterPillActive]}
+                        onPress={() =>
+                          setCounterDeltas((prev) => ({
+                            ...prev,
+                            [req.id]: (prev[req.id] || 0) + 10,
+                          }))
+                        }
+                        style={styles.stackPill}
                       >
-                        <Text style={[styles.counterPillText, delta === 0 && styles.counterPillTextActive]}>
-                          Rs. {customerFare} (Ask)
-                        </Text>
+                        <Text style={styles.stackPillText}>+10</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        onPress={() => setCounterDeltas((prev) => ({ ...prev, [req.id]: 30 }))}
-                        style={[styles.counterPill, delta === 30 && styles.counterPillActive]}
+                        onPress={() =>
+                          setCounterDeltas((prev) => ({
+                            ...prev,
+                            [req.id]: (prev[req.id] || 0) + 20,
+                          }))
+                        }
+                        style={styles.stackPill}
                       >
-                        <Text style={[styles.counterPillText, delta === 30 && styles.counterPillTextActive]}>
-                          +30 (Rs. {customerFare + 30})
-                        </Text>
+                        <Text style={styles.stackPillText}>+20</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        onPress={() => setCounterDeltas((prev) => ({ ...prev, [req.id]: 50 }))}
-                        style={[styles.counterPill, delta === 50 && styles.counterPillActive]}
+                        onPress={() =>
+                          setCounterDeltas((prev) => ({
+                            ...prev,
+                            [req.id]: (prev[req.id] || 0) + 50,
+                          }))
+                        }
+                        style={styles.stackPill}
                       >
-                        <Text style={[styles.counterPillText, delta === 50 && styles.counterPillTextActive]}>
-                          +50 (Rs. {customerFare + 50})
-                        </Text>
+                        <Text style={styles.stackPillText}>+50</Text>
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        onPress={() => setCounterDeltas((prev) => ({ ...prev, [req.id]: 100 }))}
-                        style={[styles.counterPill, delta === 100 && styles.counterPillActive]}
+                        onPress={() =>
+                          setCounterDeltas((prev) => ({
+                            ...prev,
+                            [req.id]: (prev[req.id] || 0) + 100,
+                          }))
+                        }
+                        style={styles.stackPill}
                       >
-                        <Text style={[styles.counterPillText, delta === 100 && styles.counterPillTextActive]}>
-                          +100 (Rs. {customerFare + 100})
-                        </Text>
+                        <Text style={styles.stackPillText}>+100</Text>
                       </TouchableOpacity>
+
+                      {delta > 0 && (
+                        <TouchableOpacity
+                          onPress={() =>
+                            setCounterDeltas((prev) => ({
+                              ...prev,
+                              [req.id]: Math.max(0, (prev[req.id] || 0) - 10),
+                            }))
+                          }
+                          style={styles.decrementPill}
+                        >
+                          <Text style={styles.decrementPillText}>-10</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    {/* Counter Summary Pill */}
+                    <View style={styles.counterSummaryPill}>
+                      <Text style={styles.counterSummaryText}>
+                        Your Offer: <Text style={styles.boldAmount}>Rs. {currentPrice}</Text>
+                        {delta > 0 ? (
+                          <Text style={styles.stackedBadgeText}> (+Rs. {delta} stacked)</Text>
+                        ) : (
+                          <Text style={styles.passengerAskHint}> (Passenger ask: Rs. {customerFare})</Text>
+                        )}
+                      </Text>
                     </View>
                   </View>
 
@@ -407,7 +458,7 @@ export default function ProviderDashboardScreen() {
                       >
                         <Ionicons name="paper-plane" size={16} color="#FFFFFF" />
                         <Text style={styles.counterActionBtnText}>
-                          Send Counter Rs. {currentPrice}
+                          Send Counter Rs. {currentPrice} (+{delta})
                         </Text>
                       </TouchableOpacity>
                     ) : (
@@ -919,37 +970,90 @@ const styles = StyleSheet.create({
   bargainSection: {
     marginBottom: Spacing.md,
   },
+  bargainHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
   bargainHeader: {
     fontSize: 11,
     fontWeight: '700',
     color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
+  },
+  resetDeltaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: BorderRadius.round,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  resetDeltaText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#DC2626',
   },
   counterPillsRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
     flexWrap: 'wrap',
+    marginBottom: Spacing.xs,
   },
-  counterPill: {
+  stackPill: {
+    backgroundColor: Colors.primaryLight,
+    borderRadius: BorderRadius.round,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#B3F5D1',
+  },
+  stackPillText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.primary,
+  },
+  decrementPill: {
     backgroundColor: '#F1F5F9',
     borderRadius: BorderRadius.round,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 5,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
     borderWidth: 1,
     borderColor: '#CBD5E1',
   },
-  counterPillActive: {
-    backgroundColor: Colors.primaryLight,
-    borderColor: Colors.primary,
+  decrementPillText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#64748B',
   },
-  counterPillText: {
+  counterSummaryPill: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginTop: 2,
+  },
+  counterSummaryText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: Colors.textPrimary,
+    color: Colors.textSecondary,
   },
-  counterPillTextActive: {
+  boldAmount: {
+    fontWeight: '800',
     color: Colors.primary,
+    fontSize: 13,
+  },
+  stackedBadgeText: {
     fontWeight: '700',
+    color: '#0284C7',
+  },
+  passengerAskHint: {
+    color: Colors.textMuted,
+    fontStyle: 'italic',
   },
 
   // Actions

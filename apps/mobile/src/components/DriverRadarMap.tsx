@@ -58,22 +58,22 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
         id: r.id,
         name: r.customerName,
         fare: r.customerOfferedFare || r.suggestedFare || 400,
-        pickupLat: r.pickupLatitude,
-        pickupLng: r.pickupLongitude,
-        dropoffLat: r.dropoffLatitude,
-        dropoffLng: r.dropoffLongitude,
-        pickupAddress: r.pickupAddressText,
-        dropoffAddress: r.dropoffAddressText,
+        pickupLat: Number(r.pickupLatitude || 24.8138),
+        pickupLng: Number(r.pickupLongitude || 67.0305),
+        dropoffLat: Number(r.dropoffLatitude || 24.8568),
+        dropoffLng: Number(r.dropoffLongitude || 67.0544),
+        pickupAddress: r.pickupAddressText || 'Karachi',
+        dropoffAddress: r.dropoffAddressText || 'Karachi',
         isSelected: selectedRequest?.id === r.id,
       }))
     );
   }, [requests, selectedRequest?.id]);
 
   const leafletHtml = useMemo(() => {
-    const selPickupLat = selectedRequest ? selectedRequest.pickupLatitude : driverLat + 0.008;
-    const selPickupLng = selectedRequest ? selectedRequest.pickupLongitude : driverLng - 0.005;
-    const selDropoffLat = selectedRequest ? selectedRequest.dropoffLatitude : 24.8568;
-    const selDropoffLng = selectedRequest ? selectedRequest.dropoffLongitude : 67.0544;
+    const selPickupLat = selectedRequest ? Number(selectedRequest.pickupLatitude || 24.8138) : driverLat + 0.008;
+    const selPickupLng = selectedRequest ? Number(selectedRequest.pickupLongitude || 67.0305) : driverLng - 0.005;
+    const selDropoffLat = selectedRequest ? Number(selectedRequest.dropoffLatitude || 24.8568) : 24.8568;
+    const selDropoffLng = selectedRequest ? Number(selectedRequest.dropoffLongitude || 67.0544) : 67.0544;
 
     return `
 <!DOCTYPE html>
@@ -84,13 +84,24 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    html, body, #map {
+    html, body {
       height: 100%;
       width: 100%;
       margin: 0;
       padding: 0;
-      background-color: #F1F5F9;
+      overflow: hidden;
+      background-color: #E2E8F0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #E2E8F0;
     }
     .custom-marker {
       background: transparent !important;
@@ -111,7 +122,7 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
       height: 48px;
       border-radius: 50%;
       background: rgba(0, 135, 90, 0.22);
-      border: 1.5px solid rgba(0, 135, 90, 0.45);
+      border: 1.5px solid rgba(0, 135, 90, 0.5);
       animation: radarPulse 2.2s infinite ease-out;
     }
     @keyframes radarPulse {
@@ -119,12 +130,12 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
       100% { transform: scale(2.2); opacity: 0; }
     }
     .driver-car-icon-wrap {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       background: #00875A;
       border: 2.5px solid #FFFFFF;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -136,24 +147,25 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
       border: 1.5px solid #CBD5E1;
       border-radius: 18px;
       padding: 3px 8px 3px 5px;
-      box-shadow: 0 3px 12px rgba(15, 23, 42, 0.15);
+      box-shadow: 0 3px 12px rgba(15, 23, 42, 0.18);
       display: flex;
       align-items: center;
       gap: 5px;
       white-space: nowrap;
       cursor: pointer;
+      user-select: none;
       transition: all 0.2s ease;
       transform-origin: center bottom;
     }
     .cust-pin-card:hover {
       transform: scale(1.08);
-      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.22);
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
     }
     .cust-pin-card.selected {
       background: #00875A;
       border-color: #006644;
-      box-shadow: 0 4px 16px rgba(0, 135, 90, 0.45);
-      transform: scale(1.1);
+      box-shadow: 0 4px 16px rgba(0, 135, 90, 0.5);
+      transform: scale(1.12);
       z-index: 1000;
     }
     .cust-dot {
@@ -196,24 +208,25 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
       padding: 2px 6px;
       font-size: 10px;
       font-weight: 800;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       white-space: nowrap;
     }
     /* Floating Navigation Guidance Bar */
     .nav-guidance-bar {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      right: 12px;
+      top: 10px;
+      left: 10px;
+      right: 10px;
       z-index: 1000;
       background: #FFFFFF;
       border-radius: 12px;
       padding: 8px 12px;
-      box-shadow: 0 3px 12px rgba(15, 23, 42, 0.12);
+      box-shadow: 0 3px 12px rgba(15, 23, 42, 0.15);
       border: 1px solid #E2E8F0;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      pointer-events: none;
     }
     .nav-guidance-left {
       display: flex;
@@ -291,17 +304,6 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
       color: #64748B;
       margin-top: 4px;
     }
-    /* Route ETA Tooltip */
-    .eta-pill {
-      background: #1E293B;
-      color: #F8FAFC;
-      border-radius: 10px;
-      padding: 2px 7px;
-      font-size: 10px;
-      font-weight: 700;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      white-space: nowrap;
-    }
   </style>
 </head>
 <body>
@@ -315,11 +317,11 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
       <div class="nav-turn-icon">↑</div>
       <div class="nav-text-col">
         <span class="nav-title" id="nav-guide-text">Pickup: ${selectedRequest.customerName}</span>
-        <span class="nav-sub" id="nav-address-text">${selectedRequest.pickupAddressText.slice(0, 36)}...</span>
+        <span class="nav-sub" id="nav-address-text">${(selectedRequest.pickupAddressText || '').slice(0, 36)}...</span>
       </div>
     </div>
     <div class="nav-eta-badge">
-      <span class="nav-eta-time" id="nav-eta-mins">... min</span>
+      <span class="nav-eta-time" id="nav-eta-mins">Calculating...</span>
       <span class="nav-eta-dist" id="nav-eta-dist">... km</span>
     </div>
   </div>
@@ -342,214 +344,210 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
   }
 
   <script>
-    var requestsData = ${serializedRequests};
-    var driverLat = ${driverLat};
-    var driverLng = ${driverLng};
-    var selPickupLat = ${selPickupLat};
-    var selPickupLng = ${selPickupLng};
-    var selDropoffLat = ${selDropoffLat};
-    var selDropoffLng = ${selDropoffLng};
+    try {
+      var requestsData = ${serializedRequests};
+      var driverLat = Number(${driverLat});
+      var driverLng = Number(${driverLng});
+      var selPickupLat = Number(${selPickupLat});
+      var selPickupLng = Number(${selPickupLng});
+      var selDropoffLat = Number(${selDropoffLat});
+      var selDropoffLng = Number(${selDropoffLng});
 
-    var map = L.map('map', {
-      center: [driverLat, driverLng],
-      zoom: 14,
-      zoomControl: false
-    });
+      function calcDistKm(lat1, lon1, lat2, lon2) {
+        var R = 6371;
+        var dLat = (lat2 - lat1) * Math.PI / 180;
+        var dLon = (lon2 - lon1) * Math.PI / 180;
+        var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return Number((R * c).toFixed(1));
+      }
 
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    // 1. Driver Location Marker
-    var driverCarSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFFFF" xmlns="http://www.w3.org/2000/svg">' +
-      '<path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>' +
-    '</svg>';
-
-    var driverIcon = L.divIcon({
-      className: 'custom-marker',
-      html: '<div class="driver-halo-container" title="Your Captain Position"><div class="driver-radar-wave"></div><div class="driver-car-icon-wrap">' + driverCarSvg + '</div></div>',
-      iconSize: [44, 44],
-      iconAnchor: [22, 22]
-    });
-    var driverMarker = L.marker([driverLat, driverLng], {
-      icon: driverIcon,
-      zIndexOffset: 1200
-    }).addTo(map);
-
-    // 2. Customer Request Pins
-    var boundsPoints = [[driverLat, driverLng]];
-
-    requestsData.forEach(function(req) {
-      var isSelected = req.isSelected;
-      var pinHtml = '<div class="cust-pin-card ' + (isSelected ? 'selected' : '') + '" onclick="window.parent.postMessage({ type: \'SELECT_REQUEST\', id: \'' + req.id + '\' }, \'*\')">' +
-        '<div class="cust-dot"></div>' +
-        '<span class="cust-pin-name">' + req.name + '</span>' +
-        '<span class="cust-pin-fare">Rs. ' + req.fare + '</span>' +
-      '</div>';
-
-      var custIcon = L.divIcon({
-        className: 'custom-marker',
-        html: pinHtml,
-        iconSize: [120, 28],
-        iconAnchor: [60, 14]
+      // Initialize map with center at driver
+      var map = L.map('map', {
+        center: [driverLat, driverLng],
+        zoom: 14,
+        zoomControl: false
       });
 
-      var marker = L.marker([req.pickupLat, req.pickupLng], {
-        icon: custIcon,
-        zIndexOffset: isSelected ? 1100 : 900
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
       }).addTo(map);
 
-      boundsPoints.push([req.pickupLat, req.pickupLng]);
+      // Force size update to prevent blank grey tiles in iframe
+      setTimeout(function() {
+        map.invalidateSize();
+      }, 200);
 
-      marker.on('click', function() {
-        window.parent.postMessage({ type: 'SELECT_REQUEST', id: req.id }, '*');
-      });
-    });
+      // 1. Driver Location Marker
+      var driverCarSvg = '<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFFFFF" xmlns="http://www.w3.org/2000/svg">' +
+        '<path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>' +
+      '</svg>';
 
-    // 3. Polylines for Selected Request
-    // Approach Route (Driver -> Customer Pickup)
-    var approachRouteBorder = L.polyline([], {
-      color: '#1E3A8A',
-      weight: 7,
-      opacity: 0.8,
-      lineCap: 'round',
-      lineJoin: 'round'
-    }).addTo(map);
-
-    var approachRouteLine = L.polyline([], {
-      color: '#2563EB', // Blue for Driver navigation to customer
-      weight: 4.5,
-      opacity: 0.95,
-      lineCap: 'round',
-      lineJoin: 'round'
-    }).addTo(map);
-
-    // Main Passenger Route (Pickup -> Dropoff)
-    var tripRouteBorder = L.polyline([], {
-      color: '#064E3B',
-      weight: 6,
-      opacity: 0.7,
-      dashArray: '6, 6'
-    }).addTo(map);
-
-    var tripRouteLine = L.polyline([], {
-      color: '#00875A', // Green for Passenger Trip
-      weight: 3.5,
-      opacity: 0.9,
-      dashArray: '6, 6'
-    }).addTo(map);
-
-    // Dropoff Marker for selected trip
-    var dropoffPin = null;
-    if (requestsData.length > 0) {
-      var destIcon = L.divIcon({
+      var driverIcon = L.divIcon({
         className: 'custom-marker',
-        html: '<div class="dest-pin">🏁 Dropoff</div>',
-        iconSize: [70, 22],
-        iconAnchor: [35, 11]
+        html: '<div class="driver-halo-container" title="Your Position"><div class="driver-radar-wave"></div><div class="driver-car-icon-wrap">' + driverCarSvg + '</div></div>',
+        iconSize: [44, 44],
+        iconAnchor: [22, 22]
       });
-      dropoffPin = L.marker([selDropoffLat, selDropoffLng], {
-        icon: destIcon,
-        zIndexOffset: 800
+      L.marker([driverLat, driverLng], {
+        icon: driverIcon,
+        zIndexOffset: 1200
       }).addTo(map);
-      boundsPoints.push([selDropoffLat, selDropoffLng]);
-    }
 
-    // Helper: Haversine distance
-    function calcDistKm(lat1, lon1, lat2, lon2) {
-      var R = 6371;
-      var dLat = (lat2 - lat1) * Math.PI / 180;
-      var dLon = (lon2 - lon1) * Math.PI / 180;
-      var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      return R * c;
-    }
+      // 2. Customer Request Pins
+      var boundsPoints = [[driverLat, driverLng]];
 
-    // Fetch Approach Road Route (Driver -> Pickup)
-    function fetchApproachRoute() {
-      var url = 'https://router.project-osrm.org/route/v1/driving/' +
-                driverLng + ',' + driverLat + ';' + selPickupLng + ',' + selPickupLat +
-                '?overview=full&geometries=geojson';
+      requestsData.forEach(function(req) {
+        var isSelected = req.isSelected;
+        var pinHtml = '<div class="cust-pin-card ' + (isSelected ? 'selected' : '') + '">' +
+          '<div class="cust-dot"></div>' +
+          '<span class="cust-pin-name">' + req.name + '</span>' +
+          '<span class="cust-pin-fare">Rs. ' + req.fare + '</span>' +
+        '</div>';
 
-      fetch(url)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data && data.routes && data.routes.length > 0) {
-            var route = data.routes[0];
-            var pts = route.geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
-            approachRouteBorder.setLatLngs(pts);
-            approachRouteLine.setLatLngs(pts);
-
-            var distKm = (route.distance / 1000).toFixed(1);
-            var durationMins = Math.max(2, Math.round(route.duration / 60));
-
-            var etaMinsEl = document.getElementById('nav-eta-mins');
-            var etaDistEl = document.getElementById('nav-eta-dist');
-            if (etaMinsEl) etaMinsEl.innerText = durationMins + ' min away';
-            if (etaDistEl) etaDistEl.innerText = distKm + ' km to pickup';
-
-            window.parent.postMessage({
-              type: 'APPROACH_METRICS',
-              distanceKm: Number(distKm),
-              durationMins: durationMins
-            }, '*');
-          } else {
-            // Fallback direct line
-            var fallbackPts = [[driverLat, driverLng], [selPickupLat, selPickupLng]];
-            approachRouteLine.setLatLngs(fallbackPts);
-            var directKm = calcDistKm(driverLat, driverLng, selPickupLat, selPickupLng).toFixed(1);
-            var directMins = Math.max(2, Math.round(directKm * 2.8));
-            var etaMinsEl = document.getElementById('nav-eta-mins');
-            var etaDistEl = document.getElementById('nav-eta-dist');
-            if (etaMinsEl) etaMinsEl.innerText = directMins + ' min away';
-            if (etaDistEl) etaDistEl.innerText = directKm + ' km to pickup';
-          }
-        })
-        .catch(function() {
-          var fallbackPts = [[driverLat, driverLng], [selPickupLat, selPickupLng]];
-          approachRouteLine.setLatLngs(fallbackPts);
+        var custIcon = L.divIcon({
+          className: 'custom-marker',
+          html: pinHtml,
+          iconSize: [120, 28],
+          iconAnchor: [60, 14]
         });
-    }
 
-    // Fetch Trip Route (Pickup -> Dropoff)
-    function fetchTripRoute() {
-      var url = 'https://router.project-osrm.org/route/v1/driving/' +
-                selPickupLng + ',' + selPickupLat + ';' + selDropoffLng + ',' + selDropoffLat +
-                '?overview=full&geometries=geojson';
+        var marker = L.marker([req.pickupLat, req.pickupLng], {
+          icon: custIcon,
+          zIndexOffset: isSelected ? 1100 : 900
+        }).addTo(map);
 
-      fetch(url)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (data && data.routes && data.routes.length > 0) {
-            var route = data.routes[0];
-            var pts = route.geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
-            tripRouteBorder.setLatLngs(pts);
-            tripRouteLine.setLatLngs(pts);
-          } else {
-            tripRouteLine.setLatLngs([[selPickupLat, selPickupLng], [selDropoffLat, selDropoffLng]]);
-          }
-        })
-        .catch(function() {
-          tripRouteLine.setLatLngs([[selPickupLat, selPickupLng], [selDropoffLat, selDropoffLng]]);
+        boundsPoints.push([req.pickupLat, req.pickupLng]);
+
+        // Clean marker click handler without fragile inline HTML quotes
+        marker.on('click', function() {
+          window.parent.postMessage({ type: 'SELECT_REQUEST', id: req.id }, '*');
         });
-    }
+      });
 
-    if (requestsData.length > 0) {
-      fetchApproachRoute();
-      fetchTripRoute();
+      // 3. Polylines for Selected Request
+      var approachRouteBorder = L.polyline([], {
+        color: '#1E3A8A',
+        weight: 7,
+        opacity: 0.8,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(map);
+
+      var approachRouteLine = L.polyline([], {
+        color: '#2563EB',
+        weight: 4.5,
+        opacity: 0.95,
+        lineCap: 'round',
+        lineJoin: 'round'
+      }).addTo(map);
+
+      var tripRouteBorder = L.polyline([], {
+        color: '#064E3B',
+        weight: 6,
+        opacity: 0.7,
+        dashArray: '6, 6'
+      }).addTo(map);
+
+      var tripRouteLine = L.polyline([], {
+        color: '#00875A',
+        weight: 3.5,
+        opacity: 0.9,
+        dashArray: '6, 6'
+      }).addTo(map);
+
+      // Dropoff Pin for selected trip
+      if (requestsData.length > 0) {
+        var destIcon = L.divIcon({
+          className: 'custom-marker',
+          html: '<div class="dest-pin">🏁 Dropoff</div>',
+          iconSize: [70, 22],
+          iconAnchor: [35, 11]
+        });
+        L.marker([selDropoffLat, selDropoffLng], {
+          icon: destIcon,
+          zIndexOffset: 800
+        }).addTo(map);
+        boundsPoints.push([selDropoffLat, selDropoffLng]);
+      }
+
+      // Instant Proximity Calculation (Never show blank "... min")
+      var directDistKm = calcDistKm(driverLat, driverLng, selPickupLat, selPickupLng);
+      var directMins = Math.max(2, Math.round(directDistKm * 2.8));
+
+      var etaMinsEl = document.getElementById('nav-eta-mins');
+      var etaDistEl = document.getElementById('nav-eta-dist');
+      if (etaMinsEl) etaMinsEl.innerText = directMins + ' min away';
+      if (etaDistEl) etaDistEl.innerText = directDistKm + ' km to pickup';
+
+      // Draw initial instant straight lines
+      var initialApproachPts = [[driverLat, driverLng], [selPickupLat, selPickupLng]];
+      approachRouteLine.setLatLngs(initialApproachPts);
+      tripRouteLine.setLatLngs([[selPickupLat, selPickupLng], [selDropoffLat, selDropoffLng]]);
 
       // Fit bounds to show driver and customer locations
       if (boundsPoints.length > 1) {
-        map.fitBounds(boundsPoints, {
-          padding: [50, 40],
-          maxZoom: 15
-        });
+        try {
+          var bounds = L.latLngBounds(boundsPoints);
+          map.fitBounds(bounds.pad(0.18));
+        } catch(e) {}
       }
+
+      // Fetch Turn-by-Turn OSRM Route asynchronously
+      function fetchOptimalRoads() {
+        var approachUrl = 'https://router.project-osrm.org/route/v1/driving/' +
+                          driverLng + ',' + driverLat + ';' + selPickupLng + ',' + selPickupLat +
+                          '?overview=full&geometries=geojson';
+
+        fetch(approachUrl)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data && data.routes && data.routes.length > 0) {
+              var route = data.routes[0];
+              var pts = route.geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
+              approachRouteBorder.setLatLngs(pts);
+              approachRouteLine.setLatLngs(pts);
+
+              var distKm = (route.distance / 1000).toFixed(1);
+              var durationMins = Math.max(2, Math.round(route.duration / 60));
+
+              if (etaMinsEl) etaMinsEl.innerText = durationMins + ' min away';
+              if (etaDistEl) etaDistEl.innerText = distKm + ' km to pickup';
+
+              window.parent.postMessage({
+                type: 'APPROACH_METRICS',
+                distanceKm: Number(distKm),
+                durationMins: durationMins
+              }, '*');
+            }
+          })
+          .catch(function() {});
+
+        var tripUrl = 'https://router.project-osrm.org/route/v1/driving/' +
+                      selPickupLng + ',' + selPickupLat + ';' + selDropoffLng + ',' + selDropoffLat +
+                      '?overview=full&geometries=geojson';
+
+        fetch(tripUrl)
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (data && data.routes && data.routes.length > 0) {
+              var route = data.routes[0];
+              var pts = route.geometry.coordinates.map(function(c) { return [c[1], c[0]]; });
+              tripRouteBorder.setLatLngs(pts);
+              tripRouteLine.setLatLngs(pts);
+            }
+          })
+          .catch(function() {});
+      }
+
+      fetchOptimalRoads();
+    } catch(err) {
+      console.error('Radar Map Error:', err);
     }
   </script>
 </body>
@@ -569,8 +567,9 @@ export const DriverRadarMap: React.FC<DriverRadarMapProps> = ({
       <View style={[styles.container, { height }, style]}>
         <iframe
           srcDoc={leafletHtml}
-          style={{ width: '100%', height: '100%', border: 'none' }}
+          style={styles.webIframe as any}
           title="Captain Radar Map"
+          frameBorder="0"
         />
       </View>
     );
@@ -587,7 +586,13 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     backgroundColor: '#E2E8F0',
+    position: 'relative',
     overflow: 'hidden',
+  },
+  webIframe: {
+    width: '100%',
+    height: '100%',
+    borderWidth: 0,
   },
   fallbackText: {
     alignSelf: 'center',
