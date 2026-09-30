@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../src/theme/colors';
@@ -17,7 +16,7 @@ import { Badge } from '../../src/components/Badge';
 
 export default function ProviderProfileScreen() {
   const router = useRouter();
-  const { currentUser, driverProfiles, toggleRoleMode } = useAppStore();
+  const { driverProfiles, toggleRoleMode } = useAppStore();
   const profile = driverProfiles['prov-driver-001'] || {
     name: 'Captain Tariq Mehmood',
     phone: '+92 301 2345678',
@@ -44,15 +43,15 @@ export default function ProviderProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Top Header */}
-      <View style={styles.topHeader}>
+      <View style={styles.header}>
         <View>
-          <Text style={styles.headerSubtitle}>Captain Account</Text>
-          <Text style={styles.headerTitle}>Driver Profile & Fleet</Text>
+          <Text style={styles.greetingText}>Captain Account</Text>
+          <Text style={styles.userNameText}>Driver Profile & Fleet</Text>
         </View>
 
-        <TouchableOpacity onPress={handleSwitchToCustomer} style={styles.modeSwitchBtn}>
-          <Ionicons name="swap-horizontal" size={16} color={Colors.primary} />
-          <Text style={styles.modeSwitchText}>Customer Mode</Text>
+        <TouchableOpacity onPress={handleSwitchToCustomer} style={styles.roleSwitchBtn}>
+          <Ionicons name="swap-horizontal" size={15} color={Colors.primary} />
+          <Text style={styles.roleSwitchText}>Customer Mode</Text>
         </TouchableOpacity>
       </View>
 
@@ -60,7 +59,7 @@ export default function ProviderProfileScreen() {
         {/* Captain Hero Profile Card */}
         <View style={styles.heroCard}>
           <View style={styles.heroAvatarCircle}>
-            <Ionicons name="person" size={40} color="#10B981" />
+            <Ionicons name="person" size={38} color={Colors.primary} />
           </View>
           <Text style={styles.heroName}>{profile.name}</Text>
           <Text style={styles.heroPhone}>{profile.phone}</Text>
@@ -76,7 +75,7 @@ export default function ProviderProfileScreen() {
           <View style={styles.badgesRow}>
             {profile.badges.map((b, i) => (
               <View key={i} style={styles.badgePill}>
-                <Ionicons name="shield-checkmark" size={12} color="#34D399" />
+                <Ionicons name="shield-checkmark" size={12} color={Colors.primary} />
                 <Text style={styles.badgeText}>{b}</Text>
               </View>
             ))}
@@ -88,7 +87,7 @@ export default function ProviderProfileScreen() {
         <View style={styles.docCard}>
           <View style={styles.docRow}>
             <View style={styles.docIconWrap}>
-              <MaterialCommunityIcons name="card-account-details-outline" size={22} color="#10B981" />
+              <MaterialCommunityIcons name="card-account-details-outline" size={22} color={Colors.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: Spacing.md }}>
               <Text style={styles.docTitle}>CNIC (National ID Card)</Text>
@@ -99,7 +98,7 @@ export default function ProviderProfileScreen() {
 
           <View style={styles.docRow}>
             <View style={styles.docIconWrap}>
-              <MaterialCommunityIcons name="car-traction-control" size={22} color="#10B981" />
+              <MaterialCommunityIcons name="car-traction-control" size={22} color={Colors.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: Spacing.md }}>
               <Text style={styles.docTitle}>Commercial Driving License</Text>
@@ -110,7 +109,7 @@ export default function ProviderProfileScreen() {
 
           <View style={[styles.docRow, { borderBottomWidth: 0 }]}>
             <View style={styles.docIconWrap}>
-              <MaterialCommunityIcons name="file-certificate-outline" size={22} color="#10B981" />
+              <MaterialCommunityIcons name="file-certificate-outline" size={22} color={Colors.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: Spacing.md }}>
               <Text style={styles.docTitle}>Vehicle Excise & Fitness</Text>
@@ -125,7 +124,7 @@ export default function ProviderProfileScreen() {
         <View style={styles.vehicleCard}>
           <View style={styles.vehicleHeaderRow}>
             <View style={styles.vehicleIconCircle}>
-              <MaterialCommunityIcons name="car-side" size={26} color="#10B981" />
+              <MaterialCommunityIcons name="car-side" size={26} color={Colors.primary} />
             </View>
             <View style={{ flex: 1, marginLeft: Spacing.md }}>
               <Text style={styles.vehicleModel}>{profile.vehicle.model}</Text>
@@ -136,16 +135,16 @@ export default function ProviderProfileScreen() {
 
           <View style={styles.vehicleFeaturesRow}>
             <View style={styles.featureItem}>
-              <Ionicons name="snow" size={16} color="#38BDF8" />
+              <Ionicons name="snow" size={16} color="#0284C7" />
               <Text style={styles.featureText}>Chilled AC Active</Text>
             </View>
             <View style={styles.featureItem}>
-              <Ionicons name="people" size={16} color="#34D399" />
+              <Ionicons name="people" size={16} color={Colors.primary} />
               <Text style={styles.featureText}>4 Passenger Seats</Text>
             </View>
             <View style={styles.featureItem}>
-              <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-              <Text style={styles.featureText}>Year {profile.vehicle.year}</Text>
+              <Ionicons name="checkmark-circle" size={16} color="#059669" />
+              <Text style={styles.featureText}>Model Year {profile.vehicle.year}</Text>
             </View>
           </View>
         </View>
@@ -162,43 +161,10 @@ export default function ProviderProfileScreen() {
                 ))}
               </View>
             </View>
-            {rev.comment && <Text style={styles.reviewComment}>"{rev.comment}"</Text>}
-            {rev.tags && (
-              <View style={styles.reviewTagsRow}>
-                {rev.tags.map((t, idx) => (
-                  <View key={idx} style={styles.tagPill}>
-                    <Text style={styles.tagText}>{t}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            <Text style={styles.reviewComment}>{rev.comment}</Text>
+            <Text style={styles.reviewTime}>{rev.createdAt}</Text>
           </View>
         ))}
-
-        {/* 24/7 Safety & Support */}
-        <View style={styles.supportBox}>
-          <Text style={styles.supportTitle}>24/7 Captain Support & Safety</Text>
-          <Text style={styles.supportSub}>
-            Need immediate help or accident assistance? Reach our dedicated operations desk.
-          </Text>
-          <View style={styles.supportBtnRow}>
-            <TouchableOpacity
-              onPress={() => Alert.alert('Captain Helpline', 'Connecting to Karachi Operations Desk: 021-111-787372')}
-              style={styles.helplineBtn}
-            >
-              <Ionicons name="call" size={16} color="#FFFFFF" />
-              <Text style={styles.helplineBtnText}>Support Desk</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => Alert.alert('Emergency Helpline', 'Dialing Sindh Police 15 & Rescue 1122...')}
-              style={styles.sosBtn}
-            >
-              <Ionicons name="alert-circle" size={16} color="#FFFFFF" />
-              <Text style={styles.sosBtnText}>Police 15 SOS</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -207,204 +173,213 @@ export default function ProviderProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: Colors.background,
   },
-  topHeader: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: '#1E293B',
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: Colors.border,
   },
-  headerSubtitle: {
+  greetingText: {
     fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    color: Colors.textSecondary,
+    fontWeight: '500',
   },
-  headerTitle: {
+  userNameText: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#F8FAFC',
+    fontWeight: '700',
+    color: Colors.textPrimary,
   },
-  modeSwitchBtn: {
+  roleSwitchBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#064E3B',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: BorderRadius.round,
-    gap: 4,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#B3F5D1',
   },
-  modeSwitchText: {
+  roleSwitchText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#34D399',
+    color: Colors.primary,
   },
   scrollContent: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxxl * 2,
+    paddingBottom: 90,
   },
+
+  // Hero Card
   heroCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.xl,
-    padding: Spacing.xl,
+    padding: Spacing.lg,
     alignItems: 'center',
-    marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#334155',
-    ...Shadows.md,
+    borderColor: Colors.border,
+    marginBottom: Spacing.lg,
+    ...Shadows.sm,
   },
   heroAvatarCircle: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#064E3B',
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
-    borderWidth: 2,
-    borderColor: '#10B981',
+    marginBottom: Spacing.sm,
   },
   heroName: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: Colors.textPrimary,
   },
   heroPhone: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: Colors.textSecondary,
     marginTop: 2,
   },
   ratingBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Spacing.sm,
     gap: 6,
+    marginTop: Spacing.sm,
   },
   starBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#78350F',
+    backgroundColor: '#FEF3C7',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: BorderRadius.xs,
+    borderRadius: BorderRadius.round,
     gap: 4,
   },
   starText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#FCD34D',
+    color: '#D97706',
   },
   ratingSub: {
-    fontSize: 12,
-    color: '#94A3B8',
+    fontSize: 11,
+    color: Colors.textSecondary,
   },
   badgesRow: {
     flexDirection: 'row',
+    gap: Spacing.xs,
     flexWrap: 'wrap',
     justifyContent: 'center',
     marginTop: Spacing.md,
-    gap: 6,
   },
   badgePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F172A',
+    backgroundColor: '#F1F5F9',
+    borderRadius: BorderRadius.round,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
-    borderRadius: BorderRadius.round,
-    borderWidth: 1,
-    borderColor: '#334155',
     gap: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   badgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#CBD5E1',
+    color: Colors.textPrimary,
   },
+
   sectionHeader: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
+    marginTop: Spacing.xs,
   },
+
+  // Document Card
   docCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xs,
-    marginBottom: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.border,
+    marginBottom: Spacing.lg,
+    ...Shadows.sm,
   },
   docRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: '#F1F5F9',
   },
   docIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#0F172A',
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   docTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: Colors.textPrimary,
   },
   docDetail: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: Colors.textSecondary,
     marginTop: 2,
   },
+
+  // Vehicle Card
   vehicleCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    marginBottom: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.border,
+    marginBottom: Spacing.lg,
+    ...Shadows.sm,
   },
   vehicleHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: Spacing.md,
   },
   vehicleIconCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#0F172A',
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   vehicleModel: {
     fontSize: 15,
-    fontWeight: '800',
-    color: '#F8FAFC',
+    fontWeight: '700',
+    color: Colors.textPrimary,
   },
   vehiclePlate: {
     fontSize: 12,
-    color: '#94A3B8',
+    color: Colors.textSecondary,
     marginTop: 2,
   },
   vehicleFeaturesRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
+    backgroundColor: '#F8FAFC',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    justifyContent: 'space-around',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   featureItem: {
     flexDirection: 'row',
@@ -414,15 +389,18 @@ const styles = StyleSheet.create({
   featureText: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#CBD5E1',
+    color: Colors.textPrimary,
   },
+
+  // Review Card
   reviewCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.md,
-    marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.border,
+    marginBottom: Spacing.sm,
+    ...Shadows.sm,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -432,7 +410,7 @@ const styles = StyleSheet.create({
   reviewCustomer: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: Colors.textPrimary,
   },
   reviewStars: {
     flexDirection: 'row',
@@ -440,80 +418,13 @@ const styles = StyleSheet.create({
   },
   reviewComment: {
     fontSize: 12,
-    color: '#CBD5E1',
-    marginTop: 6,
-    fontStyle: 'italic',
-    lineHeight: 18,
-  },
-  reviewTagsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 6,
-  },
-  tagPill: {
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.xs,
-  },
-  tagText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#34D399',
-  },
-  supportBox: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    marginTop: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  supportTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#F8FAFC',
-  },
-  supportSub: {
-    fontSize: 12,
-    color: '#94A3B8',
+    color: Colors.textSecondary,
     marginTop: 4,
     lineHeight: 18,
   },
-  supportBtnRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.md,
-  },
-  helplineBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#059669',
-    borderRadius: BorderRadius.lg,
-    paddingVertical: 10,
-    gap: 6,
-  },
-  helplineBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  sosBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#DC2626',
-    borderRadius: BorderRadius.lg,
-    paddingVertical: 10,
-    gap: 6,
-  },
-  sosBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
+  reviewTime: {
+    fontSize: 10,
+    color: Colors.textMuted,
+    marginTop: 4,
   },
 });

@@ -16,7 +16,6 @@ import { Spacing, BorderRadius, Shadows } from '../../src/theme/spacing';
 import { useAppStore } from '../../src/store/useAppStore';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Button } from '../../src/components/Button';
-import { Badge } from '../../src/components/Badge';
 
 export default function ProviderEarningsScreen() {
   const router = useRouter();
@@ -62,15 +61,15 @@ export default function ProviderEarningsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Top Header */}
-      <View style={styles.topHeader}>
+      <View style={styles.header}>
         <View>
-          <Text style={styles.headerSubtitle}>Captain Wallet</Text>
-          <Text style={styles.headerTitle}>Earnings & Payouts</Text>
+          <Text style={styles.greetingText}>Captain Wallet</Text>
+          <Text style={styles.userNameText}>Earnings & Payouts</Text>
         </View>
 
-        <TouchableOpacity onPress={handleSwitchToCustomer} style={styles.modeSwitchBtn}>
-          <Ionicons name="swap-horizontal" size={16} color={Colors.primary} />
-          <Text style={styles.modeSwitchText}>Customer Mode</Text>
+        <TouchableOpacity onPress={handleSwitchToCustomer} style={styles.roleSwitchBtn}>
+          <Ionicons name="swap-horizontal" size={15} color={Colors.primary} />
+          <Text style={styles.roleSwitchText}>Customer Mode</Text>
         </TouchableOpacity>
       </View>
 
@@ -83,7 +82,7 @@ export default function ProviderEarningsScreen() {
               <Text style={styles.heroAmount}>Rs. {providerTodayEarnings.toLocaleString()}</Text>
             </View>
             <View style={styles.walletIconCircle}>
-              <Ionicons name="wallet" size={26} color="#10B981" />
+              <Ionicons name="wallet" size={26} color={Colors.primary} />
             </View>
           </View>
 
@@ -110,7 +109,7 @@ export default function ProviderEarningsScreen() {
             onPress={() => setIsWithdrawModalOpen(true)}
             style={styles.withdrawBtn}
           >
-            <Ionicons name="paper-plane" size={18} color="#FFFFFF" />
+            <Ionicons name="paper-plane" size={16} color="#FFFFFF" />
             <Text style={styles.withdrawBtnText}>Withdraw to JazzCash / Easypaisa</Text>
           </TouchableOpacity>
         </View>
@@ -120,7 +119,7 @@ export default function ProviderEarningsScreen() {
         <View style={styles.breakdownCard}>
           <View style={styles.breakdownRow}>
             <View style={styles.breakdownItemLeft}>
-              <Ionicons name="cash-outline" size={18} color="#10B981" />
+              <Ionicons name="cash-outline" size={18} color="#059669" />
               <Text style={styles.breakdownItemTitle}>Total Passenger Cash Collected</Text>
             </View>
             <Text style={styles.breakdownItemValue}>Rs. {Math.round(providerTodayEarnings * 1.18).toLocaleString()}</Text>
@@ -128,7 +127,7 @@ export default function ProviderEarningsScreen() {
 
           <View style={styles.breakdownRow}>
             <View style={styles.breakdownItemLeft}>
-              <Ionicons name="card-outline" size={18} color="#3B82F6" />
+              <Ionicons name="card-outline" size={18} color="#2563EB" />
               <Text style={styles.breakdownItemTitle}>In-App Digital / Online Fares</Text>
             </View>
             <Text style={styles.breakdownItemValue}>Rs. {Math.round(providerTodayEarnings * 0.25).toLocaleString()}</Text>
@@ -136,10 +135,10 @@ export default function ProviderEarningsScreen() {
 
           <View style={[styles.breakdownRow, { borderBottomWidth: 0 }]}>
             <View style={styles.breakdownItemLeft}>
-              <Ionicons name="cut-outline" size={18} color="#EF4444" />
+              <Ionicons name="cut-outline" size={18} color="#DC2626" />
               <Text style={styles.breakdownItemTitle}>Platform Commission (15%)</Text>
             </View>
-            <Text style={[styles.breakdownItemValue, { color: '#EF4444' }]}>
+            <Text style={[styles.breakdownItemValue, { color: '#DC2626' }]}>
               -Rs. {Math.round(providerTodayEarnings * 0.15).toLocaleString()}
             </Text>
           </View>
@@ -159,121 +158,115 @@ export default function ProviderEarningsScreen() {
               <Text style={styles.gatewayPillText}>1Link IBAN</Text>
             </View>
             <View style={styles.gatewayPill}>
-              <Text style={styles.gatewayPillText}>Meezan Bank</Text>
+              <Text style={styles.gatewayPillText}>Raast Instant</Text>
             </View>
           </View>
         </View>
 
-        {/* Completed Trips History */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing.lg, marginBottom: Spacing.sm }}>
-          <Text style={styles.sectionHeader}>Recent Trip Receipts</Text>
-          <Badge label={`${providerRideHistory.length} Trips`} variant="info" />
-        </View>
+        {/* Recent Trip Receipts */}
+        <Text style={styles.sectionHeader}>Recent Completed Trips</Text>
+        {providerRideHistory.map((item) => (
+          <View key={item.id} style={styles.receiptCard}>
+            <View style={styles.receiptHeader}>
+              <View>
+                <Text style={styles.receiptCustName}>{item.customerName}</Text>
+                <Text style={styles.receiptTime}>{item.completedAt}</Text>
+              </View>
+              <Text style={styles.receiptFare}>Rs. {item.netEarning}</Text>
+            </View>
 
-        {providerRideHistory.map((trip) => (
-          <View key={trip.id} style={styles.tripCard}>
-            <View style={styles.tripHeaderRow}>
-              <View style={styles.customerAvatarMini}>
-                <Ionicons name="person" size={16} color={Colors.textSecondary} />
+            <View style={styles.receiptAddresses}>
+              <View style={styles.addrRow}>
+                <View style={styles.greenDot} />
+                <Text numberOfLines={1} style={styles.addrText}>{item.pickup}</Text>
               </View>
-              <View style={{ flex: 1, marginLeft: Spacing.sm }}>
-                <Text style={styles.tripCustomerName}>{trip.customerName}</Text>
-                <Text style={styles.tripTime}>{trip.completedAt}</Text>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={styles.tripFare}>+Rs. {trip.netEarning}</Text>
-                <Text style={styles.tripGross}>Gross: Rs. {trip.fare}</Text>
+              <View style={styles.addrRow}>
+                <View style={styles.redDot} />
+                <Text numberOfLines={1} style={styles.addrText}>{item.dropoff}</Text>
               </View>
             </View>
 
-            <View style={styles.tripRouteContainer}>
-              <View style={styles.tripRoutePoint}>
-                <View style={styles.greenDot} />
-                <Text numberOfLines={1} style={styles.tripRouteText}>{trip.pickup}</Text>
+            <View style={styles.receiptFooter}>
+              <View style={styles.payBadge}>
+                <Text style={styles.payBadgeText}>CASH</Text>
               </View>
-              <View style={styles.tripRouteLine} />
-              <View style={styles.tripRoutePoint}>
-                <View style={styles.redDot} />
-                <Text numberOfLines={1} style={styles.tripRouteText}>{trip.dropoff}</Text>
-              </View>
+              <Text style={styles.commText}>Fee -Rs. {item.commission} deducted</Text>
             </View>
           </View>
         ))}
       </ScrollView>
 
-      {/* Instant Payout Modal */}
+      {/* Withdraw Modal */}
       <Modal visible={isWithdrawModalOpen} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Withdraw Earnings</Text>
               <TouchableOpacity onPress={() => setIsWithdrawModalOpen(false)}>
-                <Ionicons name="close" size={24} color={Colors.textPrimary} />
+                <Ionicons name="close" size={24} color={Colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.modalSub}>
-              Available balance: Rs. {providerTodayEarnings.toLocaleString()}
+              Available balance: <Text style={styles.balanceHighlight}>Rs. {providerTodayEarnings.toLocaleString()}</Text>
             </Text>
 
-            {/* Select Gateway */}
-            <Text style={styles.inputLabel}>Select Payout Gateway</Text>
-            <View style={styles.methodsRow}>
-              {(['JAZZCASH', 'EASYPAISA', 'BANK'] as const).map((method) => {
-                const isSelected = selectedMethod === method;
-                return (
-                  <TouchableOpacity
-                    key={method}
-                    onPress={() => setSelectedMethod(method)}
-                    style={[styles.methodCard, isSelected && styles.methodCardActive]}
-                  >
-                    <Ionicons
-                      name={method === 'BANK' ? 'business' : 'phone-portrait'}
-                      size={20}
-                      color={isSelected ? '#10B981' : Colors.textMuted}
-                    />
-                    <Text style={[styles.methodText, isSelected && { color: '#10B981', fontWeight: '800' }]}>
-                      {method === 'JAZZCASH' ? 'JazzCash' : method === 'EASYPAISA' ? 'Easypaisa' : '1Link Bank'}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+            {/* Select Method */}
+            <View style={styles.methodSelector}>
+              <TouchableOpacity
+                onPress={() => setSelectedMethod('JAZZCASH')}
+                style={[styles.methodOption, selectedMethod === 'JAZZCASH' && styles.methodOptionActive]}
+              >
+                <Text style={[styles.methodOptionText, selectedMethod === 'JAZZCASH' && styles.methodOptionTextActive]}>
+                  JazzCash
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setSelectedMethod('EASYPAISA')}
+                style={[styles.methodOption, selectedMethod === 'EASYPAISA' && styles.methodOptionActive]}
+              >
+                <Text style={[styles.methodOptionText, selectedMethod === 'EASYPAISA' && styles.methodOptionTextActive]}>
+                  Easypaisa
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setSelectedMethod('BANK')}
+                style={[styles.methodOption, selectedMethod === 'BANK' && styles.methodOptionActive]}
+              >
+                <Text style={[styles.methodOptionText, selectedMethod === 'BANK' && styles.methodOptionTextActive]}>
+                  1Link Bank
+                </Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Account Number */}
+            <Text style={styles.inputLabel}>Withdrawal Amount (PKR)</Text>
+            <TextInput
+              value={withdrawAmount}
+              onChangeText={setWithdrawAmount}
+              keyboardType="number-pad"
+              style={styles.modalInput}
+              placeholder="e.g. 1500"
+              placeholderTextColor={Colors.textMuted}
+            />
+
             <Text style={styles.inputLabel}>
-              {selectedMethod === 'BANK' ? 'IBAN / Account Number' : 'Mobile Account Number'}
+              {selectedMethod === 'BANK' ? 'Account IBAN (24 digits)' : 'Mobile Wallet Number'}
             </Text>
             <TextInput
               value={accountNumber}
               onChangeText={setAccountNumber}
-              placeholder={selectedMethod === 'BANK' ? 'PK36MEZN000...' : '0300-1234567'}
-              style={styles.textInput}
+              style={styles.modalInput}
+              placeholder={selectedMethod === 'BANK' ? 'PK36MEZN000...' : '0301-2345678'}
+              placeholderTextColor={Colors.textMuted}
             />
 
-            {/* Amount */}
-            <Text style={styles.inputLabel}>Amount (PKR)</Text>
-            <TextInput
-              value={withdrawAmount}
-              onChangeText={setWithdrawAmount}
-              keyboardType="numeric"
-              placeholder="e.g. 1500"
-              style={styles.textInput}
+            <Button
+              title="Confirm Instant Cash-Out"
+              onPress={handleConfirmWithdrawal}
+              style={styles.confirmWithdrawBtn}
             />
-
-            <View style={styles.modalBtnRow}>
-              <Button
-                title="Cancel"
-                variant="outline"
-                onPress={() => setIsWithdrawModalOpen(false)}
-                style={{ flex: 1, marginRight: Spacing.sm }}
-              />
-              <Button
-                title="Confirm Payout"
-                onPress={handleConfirmWithdrawal}
-                style={{ flex: 1.5 }}
-              />
-            </View>
           </View>
         </View>
       </Modal>
@@ -284,89 +277,96 @@ export default function ProviderEarningsScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: Colors.background,
   },
-  topHeader: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: '#1E293B',
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: Colors.border,
   },
-  headerSubtitle: {
+  greetingText: {
     fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    color: Colors.textSecondary,
+    fontWeight: '500',
   },
-  headerTitle: {
+  userNameText: {
     fontSize: 18,
-    fontWeight: '800',
-    color: '#F8FAFC',
+    fontWeight: '700',
+    color: Colors.textPrimary,
   },
-  modeSwitchBtn: {
+  roleSwitchBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#064E3B',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: BorderRadius.round,
-    gap: 4,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#B3F5D1',
   },
-  modeSwitchText: {
+  roleSwitchText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#34D399',
+    color: Colors.primary,
   },
   scrollContent: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxxl * 2,
+    paddingBottom: 90,
   },
+
+  // Hero Card
   balanceHeroCard: {
-    backgroundColor: '#1E293B',
+    backgroundColor: Colors.surface,
     borderRadius: BorderRadius.xl,
     padding: Spacing.lg,
-    marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#334155',
-    ...Shadows.md,
+    borderColor: Colors.border,
+    marginBottom: Spacing.lg,
+    ...Shadows.sm,
   },
   heroTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Spacing.md,
   },
   heroLabel: {
     fontSize: 11,
-    fontWeight: '800',
-    color: '#94A3B8',
-    letterSpacing: 0.6,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    letterSpacing: 0.5,
   },
   heroAmount: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#10B981',
-    marginTop: 4,
+    fontSize: 28,
+    fontWeight: '800',
+    color: Colors.primary,
+    marginTop: 2,
   },
   walletIconCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#064E3B',
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   heroSubRow: {
     flexDirection: 'row',
+    backgroundColor: '#F8FAFC',
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
     alignItems: 'center',
     justifyContent: 'space-around',
-    marginTop: Spacing.lg,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   heroStat: {
     alignItems: 'center',
@@ -374,189 +374,205 @@ const styles = StyleSheet.create({
   heroStatValue: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: Colors.textPrimary,
   },
   heroStatLabel: {
-    fontSize: 11,
-    color: '#94A3B8',
+    fontSize: 10,
+    color: Colors.textSecondary,
     marginTop: 2,
   },
   heroDivider: {
     width: 1,
     height: 24,
-    backgroundColor: '#334155',
+    backgroundColor: Colors.border,
   },
   withdrawBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#059669',
-    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.primary,
     paddingVertical: 12,
-    marginTop: Spacing.lg,
+    borderRadius: BorderRadius.md,
     gap: 8,
+    ...Shadows.sm,
   },
   withdrawBtnText: {
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 13,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
+
   sectionHeader: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
+    marginTop: Spacing.xs,
   },
+
+  // Breakdown Card
   breakdownCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xs,
-    marginBottom: Spacing.lg,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.border,
+    marginBottom: Spacing.md,
+    ...Shadows.sm,
   },
   breakdownRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: '#F1F5F9',
   },
   breakdownItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 8,
   },
   breakdownItemTitle: {
     fontSize: 13,
-    color: '#CBD5E1',
-    fontWeight: '600',
+    color: Colors.textSecondary,
   },
   breakdownItemValue: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
   },
+
+  // Gateways
   gatewaysBanner: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.md,
-    marginBottom: Spacing.lg,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.border,
+    marginBottom: Spacing.lg,
+    ...Shadows.sm,
   },
   gatewaysTitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#94A3B8',
+    color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   gatewaysRow: {
     flexDirection: 'row',
+    gap: Spacing.xs,
     flexWrap: 'wrap',
-    gap: 8,
   },
   gatewayPill: {
-    backgroundColor: '#0F172A',
+    backgroundColor: '#F1F5F9',
+    borderRadius: BorderRadius.round,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.md,
+    paddingVertical: 5,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
   },
   gatewayPillText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#34D399',
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.textPrimary,
   },
-  tripCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
+
+  // Receipt Card
+  receiptCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.md,
-    marginBottom: Spacing.sm,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.border,
+    marginBottom: Spacing.sm,
+    ...Shadows.sm,
   },
-  tripHeaderRow: {
+  receiptHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Spacing.xs,
   },
-  customerAvatarMini: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#334155',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tripCustomerName: {
+  receiptCustName: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: Colors.textPrimary,
   },
-  tripTime: {
+  receiptTime: {
     fontSize: 11,
-    color: '#94A3B8',
-    marginTop: 1,
+    color: Colors.textSecondary,
   },
-  tripFare: {
+  receiptFare: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#10B981',
+    color: Colors.primary,
   },
-  tripGross: {
-    fontSize: 10,
-    color: '#94A3B8',
+  receiptAddresses: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    marginVertical: Spacing.xs,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  tripRouteContainer: {
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
-  },
-  tripRoutePoint: {
+  addrRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  tripRouteLine: {
-    width: 2,
-    height: 10,
-    backgroundColor: '#475569',
-    marginLeft: 4,
-    marginVertical: 2,
+    gap: 6,
   },
   greenDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: '#10B981',
   },
   redDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 7,
+    height: 7,
+    borderRadius: 1.5,
     backgroundColor: '#EF4444',
   },
-  tripRouteText: {
-    fontSize: 12,
-    color: '#CBD5E1',
+  addrText: {
+    fontSize: 11,
+    color: Colors.textSecondary,
     flex: 1,
   },
+  receiptFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: Spacing.xs,
+  },
+  payBadge: {
+    backgroundColor: '#E3FCEF',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  payBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  commText: {
+    fontSize: 10,
+    color: Colors.textSecondary,
+  },
+
+  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#1E293B',
+    backgroundColor: Colors.surface,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     padding: Spacing.xl,
+    ...Shadows.lg,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -566,58 +582,68 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: Colors.textPrimary,
   },
   modalSub: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: Colors.textSecondary,
     marginTop: 4,
     marginBottom: Spacing.md,
   },
-  inputLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#CBD5E1',
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xs,
+  balanceHighlight: {
+    color: Colors.primary,
+    fontWeight: '800',
   },
-  methodsRow: {
+  methodSelector: {
     flexDirection: 'row',
     gap: Spacing.sm,
+    marginBottom: Spacing.md,
   },
-  methodCard: {
+  methodOption: {
     flex: 1,
+    paddingVertical: 10,
+    borderRadius: BorderRadius.md,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.md,
-    backgroundColor: '#0F172A',
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1.5,
-    borderColor: '#334155',
-    gap: 4,
-  },
-  methodCardActive: {
-    borderColor: '#10B981',
-    backgroundColor: '#064E3B',
-  },
-  methodText: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '600',
-  },
-  textInput: {
-    backgroundColor: '#0F172A',
-    borderRadius: BorderRadius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#CBD5E1',
   },
-  modalBtnRow: {
-    flexDirection: 'row',
-    marginTop: Spacing.xl,
-    paddingBottom: Spacing.md,
+  methodOptionActive: {
+    backgroundColor: Colors.primaryLight,
+    borderColor: Colors.primary,
+  },
+  methodOptionText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  methodOptionTextActive: {
+    color: Colors.primary,
+    fontWeight: '800',
+  },
+  inputLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    marginBottom: 4,
+    marginTop: Spacing.xs,
+  },
+  modalInput: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    fontSize: 13,
+    color: Colors.textPrimary,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    marginBottom: Spacing.sm,
+  },
+  confirmWithdrawBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 13,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.sm,
+    ...Shadows.sm,
   },
 });

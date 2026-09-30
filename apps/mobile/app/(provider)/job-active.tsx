@@ -16,7 +16,6 @@ import { Spacing, BorderRadius, Shadows } from '../../src/theme/spacing';
 import { useAppStore } from '../../src/store/useAppStore';
 import { InteractiveMap } from '../../src/components/InteractiveMap';
 import { Button } from '../../src/components/Button';
-import { Badge } from '../../src/components/Badge';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ServiceRequestStatus } from '@superapp/types';
 
@@ -167,12 +166,13 @@ export default function ProviderJobActiveScreen() {
             onPress={() => Alert.alert('Customer Phone', `Calling ${currentRide.customerName}: ${currentRide.customerPhone || '+92 300 1234567'}`)}
             style={styles.callPill}
           >
-            <Ionicons name="call" size={16} color="#FFFFFF" />
+            <Ionicons name="call" size={15} color="#FFFFFF" />
             <Text style={styles.callPillText}>Call</Text>
           </TouchableOpacity>
 
           <TouchableOpacity onPress={handleSwitchToCustomer} style={styles.modeSwitchBtn}>
-            <Ionicons name="swap-horizontal" size={14} color="#34D399" />
+            <Ionicons name="swap-horizontal" size={15} color={Colors.primary} />
+            <Text style={styles.modeSwitchText}>Customer</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -189,7 +189,7 @@ export default function ProviderJobActiveScreen() {
             dropoffLng={currentRide.dropoffLongitude || 67.0544}
             pickupTitle={currentRide.pickupAddressText}
             dropoffTitle={currentRide.dropoffAddressText}
-            height={260}
+            height={270}
           />
         </View>
 
@@ -204,14 +204,14 @@ export default function ProviderJobActiveScreen() {
                   ? 'car-brake-parking'
                   : 'arrow-up-bold'
               }
-              size={24}
+              size={22}
               color="#FFFFFF"
             />
           </View>
           <View style={{ flex: 1, marginLeft: Spacing.md }}>
             <Text style={styles.guidanceInstruction}>
               {jobStep === 'EN_ROUTE'
-                ? 'Turn right at Clifton Submarine Chowrangi onto Marine Drive'
+                ? 'Turn right onto Marine Drive toward Dolmen Mall Gate 2'
                 : jobStep === 'ARRIVED'
                 ? 'Waiting outside Gate 2 for passenger'
                 : 'Continue straight on Shahrah-e-Faisal for 3.4 km'}
@@ -232,7 +232,7 @@ export default function ProviderJobActiveScreen() {
                 <Ionicons
                   name={waitingCountdown < 0 ? 'alert-circle' : 'time'}
                   size={20}
-                  color={waitingCountdown < 0 ? '#EF4444' : '#F59E0B'}
+                  color={waitingCountdown < 0 ? '#DC2626' : '#D97706'}
                 />
                 <Text style={styles.waitingTitle}>
                   {waitingCountdown >= 0 ? 'Free Passenger Waiting Time' : 'Overtime Waiting Surcharge'}
@@ -241,7 +241,7 @@ export default function ProviderJobActiveScreen() {
               <Text
                 style={[
                   styles.waitingTimer,
-                  waitingCountdown < 0 && { color: '#EF4444' },
+                  waitingCountdown < 0 && { color: '#DC2626' },
                 ]}
               >
                 {waitingCountdown >= 0
@@ -278,41 +278,34 @@ export default function ProviderJobActiveScreen() {
           </View>
         )}
 
-        {/* Passenger Summary Details Card */}
-        <View style={styles.passengerCard}>
-          <View style={styles.passengerHeader}>
-            <View style={styles.passengerAvatar}>
-              <Ionicons name="person" size={24} color="#94A3B8" />
+        {/* Passenger Info & Trip Details Card */}
+        <View style={styles.customerCard}>
+          <View style={styles.customerRow}>
+            <View style={styles.avatarCircle}>
+              <Ionicons name="person" size={22} color={Colors.primary} />
             </View>
-            <View style={{ flex: 1, marginLeft: Spacing.md }}>
-              <Text style={styles.passengerName}>{currentRide.customerName}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                <Text style={styles.passengerRating}>5.0 ★</Text>
-                <Text style={styles.dotSeparator}>•</Text>
-                <Text style={styles.cashBadgeText}>CASH PASSENGER</Text>
-              </View>
+            <View style={{ flex: 1, marginLeft: Spacing.sm }}>
+              <Text style={styles.custName}>{currentRide.customerName}</Text>
+              <Text style={styles.custSub}>
+                Agreed Fare: <Text style={styles.fareHighlight}>Rs. {currentRide.finalAgreedFare || 420}</Text> (Cash)
+              </Text>
             </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={styles.fareAmount}>Rs. {totalPayable}</Text>
-              <Text style={styles.fareLabel}>Cash to Collect</Text>
-            </View>
-          </View>
 
-          {/* Quick Communication Presets Bar */}
-          <View style={styles.quickChatBar}>
+            {/* In-App Chat Action */}
             <TouchableOpacity
               onPress={() => setIsChatModalOpen(true)}
               style={styles.chatActionBtn}
             >
-              <Ionicons name="chatbubble-ellipses" size={16} color="#10B981" />
-              <Text style={styles.chatActionText}>Quick Message to Passenger</Text>
+              <Ionicons name="chatbubble-ellipses-outline" size={18} color={Colors.primary} />
+              <Text style={styles.chatActionText}>Chat</Text>
             </TouchableOpacity>
 
+            {/* Police 15 SOS */}
             <TouchableOpacity
               onPress={() => Alert.alert('Police Emergency 15', 'Dialing Sindh Police Emergency Madadgar 15...')}
               style={styles.sosPill}
             >
-              <Ionicons name="warning-outline" size={16} color="#EF4444" />
+              <Ionicons name="warning-outline" size={15} color="#DC2626" />
               <Text style={styles.sosPillText}>SOS 15</Text>
             </TouchableOpacity>
           </View>
@@ -322,7 +315,7 @@ export default function ProviderJobActiveScreen() {
             <View style={styles.routePoint}>
               <View style={styles.greenCircle} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.routeTypeLabel}>PICKUP</Text>
+                <Text style={styles.routeTypeLabel}>PICKUP LOCATION</Text>
                 <Text numberOfLines={1} style={styles.routeText}>
                   {currentRide.pickupAddressText}
                 </Text>
@@ -332,7 +325,7 @@ export default function ProviderJobActiveScreen() {
             <View style={styles.routePoint}>
               <View style={styles.redSquare} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.routeTypeLabel}>DROPOFF</Text>
+                <Text style={styles.routeTypeLabel}>DROPOFF DESTINATION</Text>
                 <Text numberOfLines={1} style={styles.routeText}>
                   {currentRide.dropoffAddressText}
                 </Text>
@@ -355,7 +348,7 @@ export default function ProviderJobActiveScreen() {
             <Button
               title="Tap: Start Trip (Passenger Onboard)"
               onPress={handleStartTrip}
-              style={[styles.primaryActionButton, { backgroundColor: '#059669' }]}
+              style={[styles.primaryActionButton, { backgroundColor: Colors.primary }]}
             />
           )}
 
@@ -363,7 +356,7 @@ export default function ProviderJobActiveScreen() {
             <Button
               title={`Tap: Complete Trip & Collect Rs. ${totalPayable}`}
               onPress={handleCompleteTrip}
-              style={[styles.primaryActionButton, { backgroundColor: '#10B981' }]}
+              style={[styles.primaryActionButton, { backgroundColor: '#059669' }]}
             />
           )}
         </View>
@@ -374,102 +367,106 @@ export default function ProviderJobActiveScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.receiptCashIconCircle}>
-              <MaterialCommunityIcons name="cash-multiple" size={36} color="#10B981" />
+              <Ionicons name="cash" size={32} color="#00875A" />
             </View>
 
-            <Text style={styles.receiptTitle}>Collect Cash Payment</Text>
-            <Text style={styles.receiptSub}>Collect total cash from {currentRide.customerName}</Text>
+            <Text style={styles.receiptTitle}>Trip Completed!</Text>
+            <Text style={styles.receiptSub}>Collect cash fare directly from passenger</Text>
 
-            <View style={styles.totalCashBox}>
-              <Text style={styles.totalCashLabel}>TOTAL CASH AMOUNT</Text>
-              <Text style={styles.totalCashVal}>Rs. {totalPayable}</Text>
-            </View>
-
-            {/* Receipt Breakdown Table */}
-            <View style={styles.receiptBreakdown}>
+            <View style={styles.receiptTable}>
               <View style={styles.receiptRow}>
-                <Text style={styles.receiptRowLabel}>Base Agreed inDrive Fare</Text>
+                <Text style={styles.receiptRowLabel}>Base Agreed Fare</Text>
                 <Text style={styles.receiptRowVal}>Rs. {currentRide.finalAgreedFare || 420}</Text>
               </View>
+
               {waitingPenaltyAmount > 0 && (
                 <View style={styles.receiptRow}>
-                  <Text style={styles.receiptRowLabel}>Late Passenger Waiting Fee</Text>
-                  <Text style={[styles.receiptRowVal, { color: '#F59E0B' }]}>+Rs. {waitingPenaltyAmount}</Text>
+                  <Text style={[styles.receiptRowLabel, { color: '#DC2626' }]}>
+                    Waiting Surcharge ({Math.round(waitingOvertimeSeconds / 60)} min overtime)
+                  </Text>
+                  <Text style={[styles.receiptRowVal, { color: '#DC2626' }]}>+Rs. {waitingPenaltyAmount}</Text>
                 </View>
               )}
+
+              <View style={styles.receiptDivider} />
+
               <View style={styles.receiptRow}>
-                <Text style={styles.receiptRowLabel}>Platform Commission (15%)</Text>
-                <Text style={[styles.receiptRowVal, { color: '#EF4444' }]}>-Rs. {platformCommission}</Text>
+                <Text style={styles.receiptTotalLabel}>Total Cash to Collect</Text>
+                <Text style={styles.receiptTotalVal}>Rs. {totalPayable}</Text>
               </View>
-              <View style={[styles.receiptRow, { borderTopWidth: 1, borderTopColor: '#334155', paddingTop: 8 }]}>
-                <Text style={[styles.receiptRowLabel, { fontWeight: '800', color: '#F8FAFC' }]}>
-                  Net Earning Added to Wallet
-                </Text>
-                <Text style={[styles.receiptRowVal, { color: '#10B981', fontWeight: '900', fontSize: 16 }]}>
-                  +Rs. {netEarnings}
-                </Text>
+
+              <View style={styles.receiptRow}>
+                <Text style={styles.receiptFeeLabel}>Platform Fee (15%)</Text>
+                <Text style={styles.receiptFeeVal}>-Rs. {platformCommission}</Text>
+              </View>
+
+              <View style={styles.receiptRow}>
+                <Text style={styles.receiptNetLabel}>Your Net Take-Home</Text>
+                <Text style={styles.receiptNetVal}>Rs. {netEarnings}</Text>
               </View>
             </View>
 
             <Button
-              title={`Received Rs. ${totalPayable} Cash • Finish Job`}
+              title={`Confirm Rs. ${totalPayable} Cash Collected`}
               onPress={handleFinishCashCollection}
-              style={{ marginTop: Spacing.lg }}
+              style={styles.finishCashBtn}
             />
           </View>
         </View>
       </Modal>
 
-      {/* In-App Quick Messages Modal */}
-      <Modal visible={isChatModalOpen} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>Message {currentRide.customerName}</Text>
+      {/* Quick In-App Chat Modal */}
+      <Modal visible={isChatModalOpen} transparent animationType="fade">
+        <View style={styles.chatModalOverlay}>
+          <View style={styles.chatModalContent}>
+            <View style={styles.chatHeader}>
+              <Text style={styles.chatTitle}>Chat with {currentRide.customerName}</Text>
               <TouchableOpacity onPress={() => setIsChatModalOpen(false)}>
-                <Ionicons name="close" size={24} color="#F8FAFC" />
+                <Ionicons name="close-circle" size={24} color={Colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.presetHeading}>Quick Preset Messages</Text>
-            {[
-              'Assalam-o-Alaikum, I have arrived outside at the gate.',
-              'I am in a White Toyota Corolla (KHI-9821) with hazard lights on.',
-              'Stuck at chowrangi signal, reaching in 2 minutes.',
-              'Chilled AC is turned on for your comfort.',
-            ].map((msg, i) => (
+            <View style={styles.presetChips}>
               <TouchableOpacity
-                key={i}
-                onPress={() => {
-                  setIsChatModalOpen(false);
-                  Alert.alert('Message Sent 💬', `Sent to passenger: "${msg}"`);
-                }}
-                style={styles.presetPill}
+                onPress={() => setChatInput('Assalam-o-Alaikum, I have arrived outside your location.')}
+                style={styles.presetChip}
               >
-                <Ionicons name="chatbubble" size={14} color="#10B981" />
-                <Text style={styles.presetText}>{msg}</Text>
+                <Text style={styles.presetChipText}>"I have arrived outside"</Text>
               </TouchableOpacity>
-            ))}
+              <TouchableOpacity
+                onPress={() => setChatInput('Traffic on road, arriving in 2 minutes.')}
+                style={styles.presetChip}
+              >
+                <Text style={styles.presetChipText}>"Arriving in 2 mins"</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setChatInput('I am parked near Gate 2 with hazard lights on.')}
+                style={styles.presetChip}
+              >
+                <Text style={styles.presetChipText}>"Parked near Gate 2"</Text>
+              </TouchableOpacity>
+            </View>
 
-            <TextInput
-              value={chatInput}
-              onChangeText={setChatInput}
-              placeholder="Type custom message to passenger..."
-              placeholderTextColor="#64748B"
-              style={styles.customChatInput}
-            />
-
-            <Button
-              title="Send Message"
-              onPress={() => {
-                if (chatInput.trim()) {
-                  setIsChatModalOpen(false);
-                  Alert.alert('Message Sent 💬', `Sent: "${chatInput.trim()}"`);
+            <View style={styles.chatInputRow}>
+              <TextInput
+                value={chatInput}
+                onChangeText={setChatInput}
+                placeholder="Type Urdu / English message..."
+                placeholderTextColor={Colors.textMuted}
+                style={styles.chatInput}
+              />
+              <TouchableOpacity
+                onPress={() => {
+                  if (!chatInput) return;
+                  Alert.alert('Message Sent', `Sent to ${currentRide.customerName}: "${chatInput}"`);
                   setChatInput('');
-                }
-              }}
-              style={{ marginTop: Spacing.md }}
-            />
+                  setIsChatModalOpen(false);
+                }}
+                style={styles.sendMsgBtn}
+              >
+                <Ionicons name="send" size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -480,34 +477,35 @@ export default function ProviderJobActiveScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: Colors.background,
   },
   topNav: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    backgroundColor: '#1E293B',
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
+    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#334155',
+    borderBottomColor: Colors.border,
   },
   navSubtitle: {
     fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    color: Colors.textSecondary,
+    fontWeight: '600',
   },
   navTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#F8FAFC',
+    color: Colors.textPrimary,
+    marginTop: 1,
   },
   callPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#059669',
-    paddingHorizontal: 12,
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: BorderRadius.round,
     gap: 4,
@@ -518,206 +516,211 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   modeSwitchBtn: {
-    padding: 6,
-    backgroundColor: '#064E3B',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
     borderRadius: BorderRadius.round,
+    borderWidth: 1,
+    borderColor: '#B3F5D1',
+    gap: 4,
+  },
+  modeSwitchText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.primary,
   },
   scrollContent: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.xxxl * 2,
+    paddingBottom: 90,
   },
   mapWrap: {
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.lg,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.border,
     marginBottom: Spacing.md,
+    ...Shadows.sm,
   },
+
+  // Guidance Banner
   guidanceCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
     padding: Spacing.md,
-    marginBottom: Spacing.md,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.border,
+    marginBottom: Spacing.md,
+    ...Shadows.sm,
   },
   turnIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#059669',
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
+    backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   guidanceInstruction: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#F8FAFC',
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
   },
   guidanceSub: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: Colors.textSecondary,
     marginTop: 2,
   },
+
+  // Waiting Card
   waitingCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
+    backgroundColor: '#FFFBEB',
+    borderRadius: BorderRadius.lg,
     padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
     marginBottom: Spacing.md,
-    borderWidth: 1.5,
-    borderColor: '#F59E0B',
+    ...Shadows.sm,
   },
   waitingCardOvertime: {
-    borderColor: '#EF4444',
-    backgroundColor: '#450A0A',
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
   },
   waitingHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Spacing.xs,
   },
   waitingTitle: {
     fontSize: 13,
-    fontWeight: '800',
-    color: '#F8FAFC',
+    fontWeight: '700',
+    color: Colors.textPrimary,
   },
   waitingTimer: {
     fontSize: 18,
-    fontWeight: '900',
-    color: '#F59E0B',
+    fontWeight: '800',
+    color: '#D97706',
   },
   waitingSub: {
     fontSize: 11,
-    color: '#94A3B8',
-    marginTop: 4,
+    color: Colors.textSecondary,
     lineHeight: 16,
   },
+
+  // Taximeter
   taximeterCard: {
     flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.md,
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#334155',
+    ...Shadows.sm,
   },
   taximeterCol: {
     alignItems: 'center',
   },
   taximeterLabel: {
     fontSize: 10,
-    fontWeight: '800',
-    color: '#94A3B8',
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    letterSpacing: 0.5,
   },
   taximeterVal: {
     fontSize: 16,
-    fontWeight: '900',
-    color: '#10B981',
+    fontWeight: '800',
+    color: Colors.textPrimary,
     marginTop: 2,
   },
   taximeterDivider: {
     width: 1,
-    height: 24,
-    backgroundColor: '#334155',
+    height: 28,
+    backgroundColor: Colors.border,
   },
-  passengerCard: {
-    backgroundColor: '#1E293B',
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    marginBottom: Spacing.md,
+
+  // Customer Card
+  customerCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.border,
+    marginBottom: Spacing.md,
+    ...Shadows.sm,
   },
-  passengerHeader: {
+  customerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: Spacing.md,
   },
-  passengerAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#334155',
+  avatarCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  passengerName: {
+  custName: {
     fontSize: 15,
-    fontWeight: '800',
-    color: '#F8FAFC',
-  },
-  passengerRating: {
-    fontSize: 12,
     fontWeight: '700',
-    color: '#F59E0B',
+    color: Colors.textPrimary,
   },
-  dotSeparator: {
+  custSub: {
     fontSize: 12,
-    color: '#64748B',
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
-  cashBadgeText: {
-    fontSize: 10,
+  fareHighlight: {
+    color: Colors.primary,
     fontWeight: '800',
-    color: '#10B981',
-    backgroundColor: '#064E3B',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.xs,
-  },
-  fareAmount: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#10B981',
-  },
-  fareLabel: {
-    fontSize: 10,
-    color: '#94A3B8',
-  },
-  quickChatBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
   },
   chatActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    backgroundColor: Colors.primaryLight,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.round,
+    marginRight: Spacing.xs,
+    gap: 4,
   },
   chatActionText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    color: '#34D399',
+    color: Colors.primary,
   },
   sosPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#450A0A',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.md,
-    gap: 4,
+    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#EF4444',
+    borderColor: '#FECACA',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.round,
+    gap: 4,
   },
   sosPillText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#EF4444',
+    color: '#DC2626',
   },
+
+  // Route
   routeContainer: {
-    backgroundColor: '#0F172A',
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginTop: Spacing.md,
+    backgroundColor: '#F8FAFC',
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: '#E2E8F0',
   },
   routePoint: {
     flexDirection: 'row',
@@ -736,152 +739,199 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: '#EF4444',
   },
-  routeTypeLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#64748B',
-    letterSpacing: 0.5,
-  },
-  routeText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#F8FAFC',
-  },
   routeLine: {
     width: 2,
-    height: 14,
-    backgroundColor: '#334155',
+    height: 16,
+    backgroundColor: '#CBD5E1',
     marginLeft: 4,
     marginVertical: 2,
   },
+  routeTypeLabel: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+  },
+  routeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+    marginTop: 1,
+  },
+
+  // Action Button
   bottomActionContainer: {
-    marginTop: Spacing.sm,
+    marginTop: Spacing.xs,
   },
   primaryActionButton: {
     paddingVertical: 14,
-    borderRadius: BorderRadius.xl,
+    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.primary,
+    ...Shadows.sm,
   },
+
+  // Receipt Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#1E293B',
+    backgroundColor: Colors.surface,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
     padding: Spacing.xl,
+    ...Shadows.lg,
   },
   receiptCashIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#064E3B',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#E3FCEF',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
     marginBottom: Spacing.md,
     borderWidth: 2,
-    borderColor: '#10B981',
+    borderColor: '#A3E635',
   },
   receiptTitle: {
     fontSize: 20,
-    fontWeight: '900',
-    color: '#F8FAFC',
+    fontWeight: '800',
+    color: Colors.textPrimary,
     textAlign: 'center',
   },
   receiptSub: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: Colors.textSecondary,
     textAlign: 'center',
-    marginTop: 2,
-    marginBottom: Spacing.lg,
-  },
-  totalCashBox: {
-    backgroundColor: '#0F172A',
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#10B981',
-    marginBottom: Spacing.lg,
-  },
-  totalCashLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#94A3B8',
-    letterSpacing: 0.6,
-  },
-  totalCashVal: {
-    fontSize: 34,
-    fontWeight: '900',
-    color: '#10B981',
     marginTop: 4,
+    marginBottom: Spacing.lg,
   },
-  receiptBreakdown: {
-    backgroundColor: '#0F172A',
+  receiptTable: {
+    backgroundColor: '#F8FAFC',
     borderRadius: BorderRadius.lg,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: '#334155',
-    gap: 8,
+    borderColor: '#E2E8F0',
+    marginBottom: Spacing.lg,
   },
   receiptRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingVertical: 6,
   },
   receiptRowLabel: {
     fontSize: 13,
-    color: '#CBD5E1',
+    color: Colors.textSecondary,
   },
   receiptRowVal: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#F8FAFC',
+    color: Colors.textPrimary,
   },
-  modalHeaderRow: {
+  receiptDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 8,
+  },
+  receiptTotalLabel: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  receiptTotalVal: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.primary,
+  },
+  receiptFeeLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  receiptFeeVal: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  receiptNetLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  receiptNetVal: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#059669',
+  },
+  finishCashBtn: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 14,
+    borderRadius: BorderRadius.md,
+    ...Shadows.sm,
+  },
+
+  // Chat Modal
+  chatModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    padding: Spacing.lg,
+  },
+  chatModalContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    ...Shadows.lg,
+  },
+  chatHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.md,
   },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: '#F8FAFC',
-  },
-  presetHeading: {
-    fontSize: 12,
+  chatTitle: {
+    fontSize: 15,
     fontWeight: '700',
-    color: '#94A3B8',
-    marginBottom: Spacing.sm,
+    color: Colors.textPrimary,
   },
-  presetPill: {
+  presetChips: {
+    gap: Spacing.xs,
+    marginBottom: Spacing.md,
+  },
+  presetChip: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  presetChipText: {
+    fontSize: 12,
+    color: Colors.textPrimary,
+    fontWeight: '500',
+  },
+  chatInputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F172A',
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.xs,
-    borderWidth: 1,
-    borderColor: '#334155',
     gap: Spacing.sm,
   },
-  presetText: {
-    fontSize: 12,
-    color: '#CBD5E1',
+  chatInput: {
     flex: 1,
-  },
-  customChatInput: {
-    backgroundColor: '#0F172A',
-    borderRadius: BorderRadius.lg,
+    backgroundColor: '#F8FAFC',
+    borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: '#F8FAFC',
+    paddingVertical: 10,
+    fontSize: 13,
+    color: Colors.textPrimary,
     borderWidth: 1,
-    borderColor: '#334155',
-    marginTop: Spacing.sm,
+    borderColor: '#CBD5E1',
+  },
+  sendMsgBtn: {
+    backgroundColor: Colors.primary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -22,14 +22,14 @@ export default function ProviderTabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#10B981',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.textMuted,
         tabBarStyle: {
-          backgroundColor: '#0F172A',
+          backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#1E293B',
-          height: 62,
-          paddingBottom: 4,
+          borderTopColor: '#E2E8F0',
+          height: 60,
+          paddingBottom: 2,
           paddingTop: 4,
           position: Platform.OS === 'web' ? ('fixed' as any) : 'relative',
           bottom: 0,
@@ -37,12 +37,22 @@ export default function ProviderTabsLayout() {
           right: 0,
           zIndex: 99999,
           elevation: 20,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -3 },
+          shadowOpacity: 0.08,
+          shadowRadius: 6,
         },
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: '700',
           marginTop: 1,
           marginBottom: 1,
+          lineHeight: 12,
+        },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 1,
         },
       }}
     >
@@ -64,7 +74,7 @@ export default function ProviderTabsLayout() {
               <MaterialCommunityIcons
                 name="navigation"
                 size={23}
-                color={isJobActive ? '#10B981' : color}
+                color={isJobActive ? Colors.primary : color}
               />
               {isJobActive && (
                 <View
@@ -75,9 +85,9 @@ export default function ProviderTabsLayout() {
                     width: 9,
                     height: 9,
                     borderRadius: 4.5,
-                    backgroundColor: '#10B981',
+                    backgroundColor: Colors.primary,
                     borderWidth: 1.5,
-                    borderColor: '#0F172A',
+                    borderColor: '#FFFFFF',
                   }}
                 />
               )}
