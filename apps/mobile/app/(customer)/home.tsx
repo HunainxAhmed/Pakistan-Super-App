@@ -101,14 +101,17 @@ export default function CustomerHomeScreen() {
             <Text style={styles.userNameText}>{currentUser.fullName}</Text>
           </View>
           <View style={styles.headerActions}>
-            {/* Quick Testing Dual Role Switcher */}
+            {/* Quick Dual Role Switcher to Driver Console */}
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={toggleRoleMode}
+              onPress={() => {
+                toggleRoleMode();
+                router.push('/(provider)/dashboard');
+              }}
               style={styles.roleSwitchButton}
             >
               <Ionicons name="swap-horizontal" size={16} color={Colors.primary} />
-              <Text style={styles.roleSwitchText}>Provider Mode</Text>
+              <Text style={styles.roleSwitchText}>Driver Mode</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.iconCircle}>

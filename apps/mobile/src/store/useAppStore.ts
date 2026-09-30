@@ -39,6 +39,8 @@ interface AppState {
   providerTodayEarnings: number;
   providerCompletedJobsCount: number;
   incomingRequestsFeed: ServiceRequest[];
+  providerStep: 'EN_ROUTE' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED';
+  providerRideHistory: ProviderRideHistoryItem[];
 
   // Actions
   toggleRoleMode: () => void;
@@ -66,8 +68,23 @@ interface AppState {
   createMechanicRequest: (problem: MechanicProblemType, desc: string, offeredFare?: number) => void;
   acceptMechanicOffer: (offerId: string) => void;
   toggleProviderOnline: () => void;
+  setProviderStep: (step: 'EN_ROUTE' | 'ARRIVED' | 'IN_PROGRESS' | 'COMPLETED') => void;
   providerSendOffer: (requestId: string, fare: number) => void;
-  providerCompleteJob: (requestId: string) => void;
+  providerAcceptJob: (request: ServiceRequest, agreedFare?: number) => void;
+  providerDeclineJob: (requestId: string) => void;
+  providerCompleteJob: (requestId: string, collectedFare?: number) => void;
+  providerWithdrawFunds: (amount: number, method: string, accountDetails: string) => boolean;
+}
+
+export interface ProviderRideHistoryItem {
+  id: string;
+  customerName: string;
+  pickup: string;
+  dropoff: string;
+  fare: number;
+  commission: number;
+  netEarning: number;
+  completedAt: string;
 }
 
 const INITIAL_DRIVER_PROFILES: Record<string, DriverProfileDetail> = {
@@ -199,6 +216,153 @@ const INITIAL_DRIVER_PROFILES: Record<string, DriverProfileDetail> = {
   },
 };
 
+const INITIAL_INCOMING_REQUESTS: ServiceRequest[] = [
+  {
+    id: 'req-live-101',
+    requestNumber: 'PK-829104',
+    serviceTypeId: VehicleCategory.AC_CAR,
+    serviceType: {
+      id: VehicleCategory.AC_CAR,
+      categorySlug: 'RIDE' as any,
+      name: 'Super AC Premium',
+      slug: 'ac_car',
+      icon: 'car',
+      pricingModel: 'BARGAIN_INDRIVE' as any,
+      baseFare: 150,
+      perKmRate: 40,
+      perMinuteRate: 5,
+      minFare: 200,
+      commissionPercentage: 15,
+      isActive: true,
+    },
+    customerId: 'cust-101',
+    customerName: 'Sara Qureshi',
+    customerPhone: '+92 300 1234567',
+    status: ServiceRequestStatus.OFFERS_OPEN,
+    pickupLatitude: 24.8138,
+    pickupLongitude: 67.0305,
+    pickupAddressText: 'Dolmen Mall Clifton, Gate 2, Karachi',
+    dropoffLatitude: 24.8568,
+    dropoffLongitude: 67.0544,
+    dropoffAddressText: 'FTC Building Shahrah-e-Faisal, Karachi',
+    estimatedDistanceKm: 5.2,
+    estimatedDurationMinutes: 16,
+    suggestedFare: 450,
+    customerOfferedFare: 420,
+    finalAgreedFare: 420,
+    surgeMultiplier: 1.0,
+    createdAt: new Date(Date.now() - 60000).toISOString(),
+    updatedAt: new Date(Date.now() - 60000).toISOString(),
+  },
+  {
+    id: 'req-live-102',
+    requestNumber: 'PK-492015',
+    serviceTypeId: VehicleCategory.CAR,
+    serviceType: {
+      id: VehicleCategory.CAR,
+      categorySlug: 'RIDE' as any,
+      name: 'Ride Mini (Alto/Mehran)',
+      slug: 'car',
+      icon: 'car-side',
+      pricingModel: 'BARGAIN_INDRIVE' as any,
+      baseFare: 100,
+      perKmRate: 30,
+      perMinuteRate: 4,
+      minFare: 150,
+      commissionPercentage: 15,
+      isActive: true,
+    },
+    customerId: 'cust-102',
+    customerName: 'Zubair Ahmed',
+    customerPhone: '+92 321 9876543',
+    status: ServiceRequestStatus.OFFERS_OPEN,
+    pickupLatitude: 24.9388,
+    pickupLongitude: 67.0869,
+    pickupAddressText: 'Lucky One Mall, Main Rashid Minhas Rd, FB Area',
+    dropoffLatitude: 24.9362,
+    dropoffLongitude: 67.0425,
+    dropoffAddressText: 'Five Star Chowrangi, North Nazimabad, Karachi',
+    estimatedDistanceKm: 4.6,
+    estimatedDurationMinutes: 14,
+    suggestedFare: 360,
+    customerOfferedFare: 330,
+    finalAgreedFare: 330,
+    surgeMultiplier: 1.0,
+    createdAt: new Date(Date.now() - 120000).toISOString(),
+    updatedAt: new Date(Date.now() - 120000).toISOString(),
+  },
+  {
+    id: 'req-live-103',
+    requestNumber: 'PK-716492',
+    serviceTypeId: VehicleCategory.AC_CAR,
+    serviceType: {
+      id: VehicleCategory.AC_CAR,
+      categorySlug: 'RIDE' as any,
+      name: 'Super AC Premium',
+      slug: 'ac_car',
+      icon: 'car',
+      pricingModel: 'BARGAIN_INDRIVE' as any,
+      baseFare: 150,
+      perKmRate: 40,
+      perMinuteRate: 5,
+      minFare: 200,
+      commissionPercentage: 15,
+      isActive: true,
+    },
+    customerId: 'cust-103',
+    customerName: 'Dr. Mansoor Al-Karim',
+    customerPhone: '+92 333 5556677',
+    status: ServiceRequestStatus.OFFERS_OPEN,
+    pickupLatitude: 24.9065,
+    pickupLongitude: 67.1608,
+    pickupAddressText: 'Jinnah International Airport, Terminal 1',
+    dropoffLatitude: 24.7938,
+    dropoffLongitude: 67.0674,
+    dropoffAddressText: 'DHA Phase 6 Commercial, Khayaban-e-Shahbaz',
+    estimatedDistanceKm: 16.8,
+    estimatedDurationMinutes: 32,
+    suggestedFare: 900,
+    customerOfferedFare: 850,
+    finalAgreedFare: 850,
+    surgeMultiplier: 1.15,
+    createdAt: new Date(Date.now() - 180000).toISOString(),
+    updatedAt: new Date(Date.now() - 180000).toISOString(),
+  },
+];
+
+const INITIAL_PROVIDER_RIDE_HISTORY: ProviderRideHistoryItem[] = [
+  {
+    id: 'hist-1',
+    customerName: 'Bilal Khan',
+    pickup: 'Saddar Electronics Market, Karachi',
+    dropoff: 'Bahadurabad Char Minar Chowrangi',
+    fare: 380,
+    commission: 57,
+    netEarning: 323,
+    completedAt: 'Today, 2:30 PM',
+  },
+  {
+    id: 'hist-2',
+    customerName: 'Ayesha Siddiqui',
+    pickup: 'Dolmen Mall Clifton, Karachi',
+    dropoff: 'Burns Road Food Street, Karachi',
+    fare: 450,
+    commission: 67,
+    netEarning: 383,
+    completedAt: 'Today, 1:15 PM',
+  },
+  {
+    id: 'hist-3',
+    customerName: 'Farhan Ali',
+    pickup: 'IBA Main Campus University Road',
+    dropoff: 'NIPA Chowrangi, Gulshan-e-Iqbal',
+    fare: 280,
+    commission: 42,
+    netEarning: 238,
+    completedAt: 'Today, 11:45 AM',
+  },
+];
+
 export const useAppStore = create<AppState>((set, get) => ({
   userRoleMode: 'CUSTOMER',
   currentUser: {
@@ -238,7 +402,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   isProviderOnline: true,
   providerTodayEarnings: 3850,
   providerCompletedJobsCount: 5,
-  incomingRequestsFeed: [],
+  incomingRequestsFeed: INITIAL_INCOMING_REQUESTS,
+  providerStep: 'EN_ROUTE',
+  providerRideHistory: INITIAL_PROVIDER_RIDE_HISTORY,
 
   toggleRoleMode: () =>
     set((state) => ({
@@ -573,13 +739,61 @@ export const useAppStore = create<AppState>((set, get) => ({
   toggleProviderOnline: () =>
     set((state) => ({ isProviderOnline: !state.isProviderOnline })),
 
+  setProviderStep: (step) => set({ providerStep: step }),
+
   providerSendOffer: (requestId, fare) => {
-    set((state) => {
-      const feed = state.incomingRequestsFeed.filter((r) => r.id !== requestId);
-      return {
-        incomingRequestsFeed: feed,
-      };
+    const { currentUser, incomingRequestsFeed, activeRide, activeOffers } = get();
+    const targetRequest = incomingRequestsFeed.find((r) => r.id === requestId) || activeRide;
+
+    const newOffer: ServiceOffer = {
+      id: `off-prov-${Date.now()}`,
+      serviceRequestId: requestId,
+      providerId: currentUser.id || 'prov-driver-001',
+      providerName: 'Captain Tariq Mehmood',
+      providerRating: 4.9,
+      providerTotalJobs: 342,
+      vehicleInfo: {
+        model: 'Toyota Corolla GLI',
+        registrationNumber: 'KHI-9821',
+        color: 'White',
+      },
+      offeredFare: fare,
+      etaMinutes: 4,
+      distanceKm: 1.2,
+      status: OfferStatus.PENDING,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 60000).toISOString(),
+    };
+
+    set({
+      activeOffers: [newOffer, ...activeOffers],
     });
+  },
+
+  providerAcceptJob: (request, agreedFare) => {
+    const fare = agreedFare || request.customerOfferedFare || request.finalAgreedFare || 420;
+    const acceptedRide: ServiceRequest = {
+      ...request,
+      status: ServiceRequestStatus.ACCEPTED,
+      assignedProviderId: 'prov-driver-001',
+      assignedProviderName: 'Captain Tariq Mehmood',
+      assignedProviderPhone: '+92 301 2345678',
+      finalAgreedFare: fare,
+      customerOfferedFare: fare,
+      acceptedAt: new Date().toISOString(),
+    };
+
+    set((state) => ({
+      activeRide: acceptedRide,
+      providerStep: 'EN_ROUTE',
+      incomingRequestsFeed: state.incomingRequestsFeed.filter((r) => r.id !== request.id),
+    }));
+  },
+
+  providerDeclineJob: (requestId) => {
+    set((state) => ({
+      incomingRequestsFeed: state.incomingRequestsFeed.filter((r) => r.id !== requestId),
+    }));
   },
 
   submitDriverReview: (driverId, rating, comment, tags) => {
@@ -621,12 +835,38 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
-  providerCompleteJob: (requestId) => {
-    set((state) => ({
-      providerTodayEarnings: state.providerTodayEarnings + 650,
-      providerCompletedJobsCount: state.providerCompletedJobsCount + 1,
+  providerCompleteJob: (requestId, collectedFare) => {
+    const { activeRide, providerRideHistory, providerTodayEarnings, providerCompletedJobsCount } = get();
+    const finalFare = collectedFare || activeRide?.finalAgreedFare || 420;
+    const commission = Math.round(finalFare * 0.15);
+    const netEarning = finalFare - commission;
+
+    const newHistoryItem: ProviderRideHistoryItem = {
+      id: `hist-${Date.now()}`,
+      customerName: activeRide?.customerName || 'Sara Qureshi',
+      pickup: activeRide?.pickupAddressText || 'Dolmen Mall Clifton, Karachi',
+      dropoff: activeRide?.dropoffAddressText || 'FTC Shahrah-e-Faisal, Karachi',
+      fare: finalFare,
+      commission,
+      netEarning,
+      completedAt: 'Just now',
+    };
+
+    set({
+      providerTodayEarnings: providerTodayEarnings + netEarning,
+      providerCompletedJobsCount: providerCompletedJobsCount + 1,
+      providerRideHistory: [newHistoryItem, ...providerRideHistory],
       activeRide: null,
-      activeMechanic: null,
+      providerStep: 'COMPLETED',
+    });
+  },
+
+  providerWithdrawFunds: (amount, method, accountDetails) => {
+    const { providerTodayEarnings } = get();
+    if (amount > providerTodayEarnings) return false;
+    set((state) => ({
+      providerTodayEarnings: state.providerTodayEarnings - amount,
     }));
+    return true;
   },
 }));

@@ -62,10 +62,13 @@ export default function ProfileScreen() {
           </View>
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={toggleRoleMode}
+            onPress={() => {
+              toggleRoleMode();
+              router.push('/(provider)/dashboard');
+            }}
             style={styles.switchButton}
           >
-            <Text style={styles.switchButtonText}>Switch Mode</Text>
+            <Text style={styles.switchButtonText}>Driver Mode</Text>
           </TouchableOpacity>
         </View>
 
